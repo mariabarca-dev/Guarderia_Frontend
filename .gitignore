@@ -1,10 +1,10 @@
-HELP.md
+# Maven / Build
 target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-### STS ###
+# Spring Tool Suite (STS)
 .apt_generated
 .classpath
 .factorypath
@@ -13,13 +13,19 @@ target/
 .springBeans
 .sts4-cache
 
-### IntelliJ IDEA ###
+# IntelliJ IDEA
 .idea
 *.iws
 *.iml
 *.ipr
+/shelf/
+/workspace.xml
+/httpRequests/
+/queries/
+/dataSources/
+/dataSources.local.xml
 
-### NetBeans ###
+# NetBeans
 /nbproject/private/
 /nbbuild/
 /dist/
@@ -29,9 +35,12 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-### Tomcat / Servidor embedido ###
+# Tomcat / Servidor embebido
 work/
 tomcat.*
 
-### VS Code ###
+# VS Code
 .vscode/
+
+# Varios / Logs / Locales
+*.log
