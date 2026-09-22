@@ -1,7 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 
-<%-- DECLARACIÓN DE BEANS Y VARIABLES DE SESIÓN (PREVIENE ADVERTENCIAS Y ERRORES DE LINTER EN INTELLIJ) --%>
+<%-- DECLARACIÓN DE BEANS Y VARIABLES DE SESIÓN (PREVIENE ADVERTENCIAS EN IDE) --%>
 <jsp:useBean id="usuarioSesion" type="java.lang.Object" scope="session" />
 
 <%-- Supresión de inspección de IntelliJ para la propiedad dinámica de sesión --%>
@@ -24,13 +24,14 @@
     <div class="container-fluid">
         <a class="navbar-brand fw-bold" href="#">Panel de Gestión de Zonas</a>
         <div class="d-flex align-items-center">
-                <span class="navbar-text me-3 text-light">
-                    <%-- Resolución dinámica del objeto de sesión --%>
-                    Usuario: <strong>${usuarioSesion.nombre}</strong>
-                    (<span class="badge bg-secondary">${userRole}</span>)
-                </span>
-            <!-- Cierre de sesión por formulario POST tradicional -->
+            <span class="navbar-text me-3 text-light">
+                <%-- Resolución dinámica del objeto de sesión --%>
+                Usuario: <strong>${usuarioSesion.nombre}</strong>
+                (<span class="badge bg-secondary">${userRole}</span>)
+            </span>
+            <!-- Cierre de sesión por formulario POST tradicional con CSRF -->
             <form action="${pageContext.request.contextPath}/logout" method="POST" class="m-0">
+                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
                 <button type="submit" class="btn btn-outline-danger btn-sm">Cerrar Sesión</button>
             </form>
         </div>
@@ -41,27 +42,27 @@
 
     <!-- ALERTAS Y MENSAJES INFORMATIVOS DEL SERVIDOR -->
     <c:if test="${not empty mensajeExito}">
-        <div class="alert alert-success fade show" role="alert">
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
             <strong>¡Éxito!</strong> ${mensajeExito}
         </div>
     </c:if>
     <c:if test="${not empty mensajeError}">
-        <div class="alert alert-danger fade show" role="alert">
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
             <strong>Error:</strong> ${mensajeError}
         </div>
     </c:if>
 
-    <!-- EVALUACIÓN DE ROLES CON JSTL: ACCESO GENERAL AL DASHBOARD -->
+    <!-- EVALUACIÓN DE ROLES CON JSTL: ACCESO A PANTALLA DE ENTIDAD DE NEGOCIO -->
     <c:choose>
-        <c:when test="${userRole == 'ADMIN' || userRole == 'SYSADMIN' || userRole == 'EMPLEADO' || userRole == 'SOCIO'}">
+        <c:when test="${userRole == 'ADMINISTRADOR' || userRole == 'EMPLEADO' || userRole == 'SOCIO'}">
 
             <!-- TARJETA PRINCIPAL: LISTADO Y REGISTRO DE ZONAS -->
             <div class="card shadow-sm mb-4">
                 <div class="card-header bg-dark text-white fw-bold d-flex justify-content-between align-items-center">
                     <span>Listado General de Zonas</span>
 
-                        <%-- BOTÓN DE CREACIÓN: VISIBLE EXCLUSIVAMENTE PARA ADMINISTRADORES --%>
-                    <c:if test="${userRole == 'ADMIN' || userRole == 'SYSADMIN'}">
+                        <%-- BOTÓN DE CREACIÓN: VISIBLE EXCLUSIVAMENTE PARA ADMINISTRADORES DE NEGOCIO --%>
+                    <c:if test="${userRole == 'ADMINISTRADOR'}">
                         <form action="${pageContext.request.contextPath}/zonas/nueva" method="GET" class="m-0">
                             <button type="submit" class="btn btn-success btn-sm">+ Registrar Nueva Zona</button>
                         </form>
@@ -81,8 +82,8 @@
                                         <th>Capacidad Max. (Vehículos)</th>
                                         <th>Dimensiones (Ancho x Largo)</th>
 
-                                            <%-- COLUMNA DE ACCIONES SOLAMENTE PARA ADMINS --%>
-                                        <c:if test="${userRole == 'ADMIN' || userRole == 'SYSADMIN'}">
+                                            <%-- COLUMNA DE ACCIONES SOLAMENTE PARA ADMINISTRADORES DE NEGOCIO --%>
+                                        <c:if test="${userRole == 'ADMINISTRADOR'}">
                                             <th class="text-end">Acciones</th>
                                         </c:if>
                                     </tr>
@@ -96,14 +97,15 @@
                                             <td><strong>${z.capacidadVehiculos}</strong> lugares</td>
                                             <td>${z.ancho} m x ${z.largo} m</td>
 
-                                                <%-- BOTONES DE ACCIÓN EXCLUSIVOS PARA ADMINISTRADORES --%>
-                                            <c:if test="${userRole == 'ADMIN' || userRole == 'SYSADMIN'}">
+                                                <%-- BOTONES DE ACCIÓN EXCLUSIVOS PARA ADMINISTRADOR --%>
+                                            <c:if test="${userRole == 'ADMINISTRADOR'}">
                                                 <td class="text-end">
                                                     <form action="${pageContext.request.contextPath}/zonas/editar" method="GET" class="d-inline">
                                                         <input type="hidden" name="id" value="${z.id}">
                                                         <button type="submit" class="btn btn-warning btn-sm">Editar</button>
                                                     </form>
                                                     <form action="${pageContext.request.contextPath}/zonas/eliminar" method="POST" class="d-inline">
+                                                        <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
                                                         <input type="hidden" name="id" value="${z.id}">
                                                         <button type="submit" class="btn btn-danger btn-sm">Borrar</button>
                                                     </form>
@@ -124,7 +126,7 @@
                 </div>
             </div>
 
-            <!-- FORMULARIO DE FILTRADO / BÚSQUEDA TRADICIONAL (CERO JAVASCRIPT) -->
+            <!-- FORMULARIO DE FILTRADO / BÚSQUEDA TRADICIONAL (GET, CERO JAVASCRIPT) -->
             <div class="card shadow-sm mb-4">
                 <div class="card-header bg-light fw-bold">
                     Filtrar Zonas
@@ -149,11 +151,11 @@
 
         </c:when>
 
-        <%-- DENEGACIÓN DE ACCESO EN CASO DE ROL NO AUTORIZADO --%>
+        <%-- DENEGACIÓN DE ACCESO EN CASO DE ROL NO AUTORIZADO (EJ. SYSADMIN EN ENTIDADES DE NEGOCIO) --%>
         <c:otherwise>
-            <div class="alert alert-danger shadow-sm" role="alert">
+            <div class="alert alert-danger shadow-sm mt-4" role="alert">
                 <h4 class="alert-heading">Acceso Restringido</h4>
-                <p class="mb-0">Su rol actual (<strong>${userRole}</strong>) no tiene los permisos necesarios para visualizar la gestión de zonas.</p>
+                <p class="mb-0">Su rol actual (<strong>${userRole}</strong>) no tiene los permisos necesarios para visualizar las pantallas de gestión de negocio.</p>
             </div>
         </c:otherwise>
     </c:choose>

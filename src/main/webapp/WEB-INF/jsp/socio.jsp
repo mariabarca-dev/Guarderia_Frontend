@@ -1,9 +1,8 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 
-<%-- DECLARACIÓN DE BEANS Y VARIABLES DE SESIÓN (PREVIENE ADVERTENCIAS DEL IDE) --%>
+<%-- DECLARACIÓN DE BEANS Y VARIABLES DE SESIÓN --%>
 <jsp:useBean id="usuarioSesion" type="java.lang.Object" scope="session" />
-<%--noinspection ElSpecValidation--%>
 <c:set var="userRole" value="${sessionScope.userRole}" />
 
 <!DOCTYPE html>
@@ -22,13 +21,13 @@
     <div class="container-fluid">
         <a class="navbar-brand fw-bold" href="#">Panel General del Socio</a>
         <div class="d-flex align-items-center">
-                <span class="navbar-text me-3 text-light">
-                    <%-- Acceso seguro al nombre del usuario en sesión --%>
-                    Socio: <strong>${usuarioSesion.nombre}</strong>
-                    (<span class="badge bg-light text-primary">${userRole}</span>)
-                </span>
-            <!-- Cierre de sesión por formulario tradicional POST -->
+            <span class="navbar-text me-3 text-light">
+                Socio: <strong>${usuarioSesion.nombre}</strong>
+                (<span class="badge bg-light text-primary">${userRole}</span>)
+            </span>
+            <!-- Cierre de sesión por formulario tradicional POST con token CSRF -->
             <form action="${pageContext.request.contextPath}/logout" method="POST" class="m-0">
+                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
                 <button type="submit" class="btn btn-outline-light btn-sm">Cerrar Sesión</button>
             </form>
         </div>
@@ -49,9 +48,9 @@
         </div>
     </c:if>
 
-    <!-- EVALUACIÓN DE ROLES CON JSTL: VERIFICACIÓN DE ACCESO DE SOCIO -->
+    <!-- EVALUACIÓN DE ROLES CON JSTL: VERIFICACIÓN DE ACCESO DE SOCIO Y ADMINISTRATIVO DE NEGOCIO -->
     <c:choose>
-        <c:when test="${userRole == 'SOCIO' || userRole == 'ADMIN' || userRole == 'SYSADMIN'}">
+        <c:when test="${userRole == 'SOCIO' || userRole == 'EMPLEADO' || userRole == 'ADMINISTRADOR'}">
 
             <!-- 1. SECCIÓN: MIS DATOS PERSONALES -->
             <div class="row mb-4">
@@ -97,12 +96,12 @@
                             </c:choose>
                         </div>
 
-                        <!-- ACCIONES ADMINISTRATIVAS CONDICIONADAS CON C:IF -->
-                        <c:if test="${userRole == 'ADMIN' || userRole == 'SYSADMIN'}">
+                        <!-- ACCIONES ADMINISTRATIVAS EXCLUSIVAS PARA ADMINISTRADOR (ENTIDAD DE NEGOCIO) -->
+                        <c:if test="${userRole == 'ADMINISTRADOR'}">
                             <div class="card-footer bg-light text-end">
                                 <form action="${pageContext.request.contextPath}/admin/socios/editar" method="GET" class="d-inline">
                                     <input type="hidden" name="id" value="${datosSocio.id}">
-                                    <button type="submit" class="btn btn-warning btn-sm">Editar Datos de Socio (Modo Admin)</button>
+                                    <button type="submit" class="btn btn-warning btn-sm">Editar Datos de Socio</button>
                                 </form>
                             </div>
                         </c:if>
@@ -110,17 +109,17 @@
                 </div>
             </div>
 
-            <!-- 2. SECCIÓN: TABLAS DE INFORMACIÓN (MODO LECTURA PARA SOCIO) -->
+            <!-- 2. SECCIÓN: TABLAS DE INFORMACIÓN RELACIONADA -->
             <div class="row">
 
-                <!-- TABLA 2: MIS VEHÍCULOS -->
+                <!-- TABLA: VEHÍCULOS (RELACIÓN 1->N CON SOCIO) -->
                 <div class="col-lg-6 mb-4">
                     <div class="card shadow-sm h-100">
                         <div class="card-header bg-dark text-white fw-bold d-flex justify-content-between align-items-center">
-                            <span>2. Mis Vehículos Registrados</span>
-                                <%-- Control de botón Crear para Admins --%>
-                            <c:if test="${userRole == 'ADMIN' || userRole == 'SYSADMIN'}">
+                            <span>2. Vehículos Registrados</span>
+                            <c:if test="${userRole == 'ADMINISTRADOR'}">
                                 <form action="${pageContext.request.contextPath}/admin/vehiculos/nuevo" method="GET" class="m-0">
+                                    <input type="hidden" name="socioId" value="${datosSocio.id}">
                                     <button type="submit" class="btn btn-success btn-sm">+ Registrar Vehículo</button>
                                 </form>
                             </c:if>
@@ -135,7 +134,7 @@
                                                 <th>ID</th>
                                                 <th>Matrícula</th>
                                                 <th>Tipo</th>
-                                                <c:if test="${userRole == 'ADMIN' || userRole == 'SYSADMIN'}">
+                                                <c:if test="${userRole == 'ADMINISTRADOR'}">
                                                     <th class="text-end">Acciones</th>
                                                 </c:if>
                                             </tr>
@@ -146,14 +145,14 @@
                                                     <td>${v.id}</td>
                                                     <td><span class="badge bg-secondary">${v.matricula}</span></td>
                                                     <td>${v.tipo}</td>
-
-                                                    <c:if test="${userRole == 'ADMIN' || userRole == 'SYSADMIN'}">
+                                                    <c:if test="${userRole == 'ADMINISTRADOR'}">
                                                         <td class="text-end">
                                                             <form action="${pageContext.request.contextPath}/admin/vehiculos/editar" method="GET" class="d-inline">
                                                                 <input type="hidden" name="id" value="${v.id}">
                                                                 <button type="submit" class="btn btn-warning btn-sm">Editar</button>
                                                             </form>
                                                             <form action="${pageContext.request.contextPath}/admin/vehiculos/eliminar" method="POST" class="d-inline">
+                                                                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
                                                                 <input type="hidden" name="id" value="${v.id}">
                                                                 <button type="submit" class="btn btn-danger btn-sm">Borrar</button>
                                                             </form>
@@ -167,7 +166,7 @@
                                 </c:when>
                                 <c:otherwise>
                                     <div class="p-4 text-center text-muted">
-                                        <p class="mb-0">No tiene vehículos registrados a su nombre.</p>
+                                        <p class="mb-0">No se encuentran vehículos registrados.</p>
                                     </div>
                                 </c:otherwise>
                             </c:choose>
@@ -175,21 +174,21 @@
                     </div>
                 </div>
 
-                <!-- TABLA 3: MIS GARAJES COMPRADOS/ALQUILADOS -->
+                <!-- TABLA: GARAJES COMPRADOS / PROPIEDAD (PROPIEDADGARAGEDTO) -->
                 <div class="col-lg-6 mb-4">
                     <div class="card shadow-sm h-100">
                         <div class="card-header bg-dark text-white fw-bold d-flex justify-content-between align-items-center">
-                            <span>3. Mis Garajes Comprados / Alquilados</span>
-                                <%-- Control de botón Asignar/Comprar para Admins --%>
-                            <c:if test="${userRole == 'ADMIN' || userRole == 'SYSADMIN'}">
-                                <form action="${pageContext.request.contextPath}/admin/garajes/asignar" method="GET" class="m-0">
-                                    <button type="submit" class="btn btn-info btn-sm text-white">+ Asignar Garaje</button>
+                            <span>3. Garajes en Propiedad</span>
+                            <c:if test="${userRole == 'ADMINISTRADOR'}">
+                                <form action="${pageContext.request.contextPath}/admin/propiedad-garage/nuevo" method="GET" class="m-0">
+                                    <input type="hidden" name="socioId" value="${datosSocio.id}">
+                                    <button type="submit" class="btn btn-info btn-sm text-white">+ Asignar Garaje Libre</button>
                                 </form>
                             </c:if>
                         </div>
                         <div class="card-body p-0">
                             <c:choose>
-                                <c:when test="${not empty listaGarajes}">
+                                <c:when test="${not empty listaPropiedadesGarage}">
                                     <div class="table-responsive">
                                         <table class="table table-hover table-striped mb-0 align-middle">
                                             <thead class="table-light">
@@ -197,26 +196,23 @@
                                                 <th>ID Garaje</th>
                                                 <th>Zona</th>
                                                 <th>Fecha Compra</th>
-                                                <c:if test="${userRole == 'ADMIN' || userRole == 'SYSADMIN'}">
+                                                <c:if test="${userRole == 'ADMINISTRADOR'}">
                                                     <th class="text-end">Acciones</th>
                                                 </c:if>
                                             </tr>
                                             </thead>
                                             <tbody>
-                                            <c:forEach var="g" items="${listaGarajes}">
+                                            <!-- Itera la lista de PropiedadGarageDTO (no GarageDTO directamente) -->
+                                            <c:forEach var="pg" items="${listaPropiedadesGarage}">
                                                 <tr>
-                                                    <td>${g.id}</td>
-                                                    <td><span class="badge bg-info text-dark">Zona ${g.zona}</span></td>
-                                                    <td>${g.fechaCompra}</td>
-
-                                                    <c:if test="${userRole == 'ADMIN' || userRole == 'SYSADMIN'}">
+                                                    <td>${pg.garageId}</td>
+                                                    <td><span class="badge bg-info text-dark">Zona ${pg.zonaNombre}</span></td>
+                                                    <td>${pg.fechaCompra}</td>
+                                                    <c:if test="${userRole == 'ADMINISTRADOR'}">
                                                         <td class="text-end">
-                                                            <form action="${pageContext.request.contextPath}/admin/garajes/editar" method="GET" class="d-inline">
-                                                                <input type="hidden" name="id" value="${g.id}">
-                                                                <button type="submit" class="btn btn-warning btn-sm">Editar</button>
-                                                            </form>
-                                                            <form action="${pageContext.request.contextPath}/admin/garajes/desvincular" method="POST" class="d-inline">
-                                                                <input type="hidden" name="id" value="${g.id}">
+                                                            <form action="${pageContext.request.contextPath}/admin/propiedad-garage/desvincular" method="POST" class="d-inline">
+                                                                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
+                                                                <input type="hidden" name="id" value="${pg.id}">
                                                                 <button type="submit" class="btn btn-danger btn-sm">Quitar</button>
                                                             </form>
                                                         </td>
@@ -229,7 +225,7 @@
                                 </c:when>
                                 <c:otherwise>
                                     <div class="p-4 text-center text-muted">
-                                        <p class="mb-0">No tiene garajes comprados o alquilados actualmente.</p>
+                                        <p class="mb-0">No posee garajes registrados actualmente.</p>
                                     </div>
                                 </c:otherwise>
                             </c:choose>
@@ -241,11 +237,11 @@
 
         </c:when>
 
-        <%-- DENEGACIÓN DE ACCESO SI OTROROL NO AUTORIZADO INTENTA INGRESAR --%>
+        <%-- DENEGACIÓN DE ACCESO PARA ROLES NO PERMITIDOS (POR EJEMPLO SYSADMIN TRATANDO DE ACCEDER A VISTA DE NEGOCIO) --%>
         <c:otherwise>
             <div class="alert alert-danger shadow-sm">
                 <h4 class="alert-heading">Acceso Restringido</h4>
-                <p class="mb-0">Su rol actual (<strong>${userRole}</strong>) no tiene permisos para acceder al panel de consulta de socios.</p>
+                <p class="mb-0">Su rol actual (<strong>${userRole}</strong>) no está autorizado para visualizar o gestionar este panel de entidades de negocio.</p>
             </div>
         </c:otherwise>
     </c:choose>
