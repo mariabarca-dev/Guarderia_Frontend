@@ -18,16 +18,16 @@
     <div class="container mt-4">
         <c:choose>
             <c:when test="${sessionScope.userRole == 'SYSADMIN'}">
-                <jsp:include page="dash/_sysadmin-panel.jsp" />
+                <jsp:include page="dash/sysadmin-panel.jsp" />
             </c:when>
             <c:when test="${sessionScope.userRole == 'ADMIN'}">
-                <jsp:include page="dash/_admin-panel.jsp" />
+                <jsp:include page="dash/admin-panel.jsp" />
             </c:when>
             <c:when test="${sessionScope.userRole == 'EMPLEADO'}">
-                <jsp:include page="dash/_empleado-panel.jsp" />
+                <jsp:include page="dash/empleado-panel.jsp" />
             </c:when>
             <c:otherwise>
-                <jsp:include page="dash/_socio-panel.jsp" />
+                <jsp:include page="dash/socio-panel.jsp" />
             </c:otherwise>
         </c:choose>
     </div>
