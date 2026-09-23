@@ -1,11 +1,11 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
     <title>Panel Principal - Guardería Central</title>
-    <!-- Bootstrap CDN (Cero JavaScript) -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Inclusión centralizada del head (Favicon, Bootstrap y CSS personalizado) -->
+    <jsp:include page="head.jsp" />
 </head>
 <body class="bg-light">
 

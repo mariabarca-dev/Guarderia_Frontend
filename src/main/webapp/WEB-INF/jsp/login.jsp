@@ -3,8 +3,8 @@
 <html>
 <head>
     <title>Login - Guardería</title>
-    <!-- Bootstrap CDN -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Inclusión centralizada del head (Favicon, Bootstrap y CSS personalizado) -->
+    <jsp:include page="head.jsp" />
 </head>
 <body class="container mt-5">
     <div class="row justify-content-center">
