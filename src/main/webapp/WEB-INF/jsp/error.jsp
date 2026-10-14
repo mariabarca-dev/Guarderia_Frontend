@@ -1,11 +1,10 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" isErrorPage="true" %>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <title>Error del Sistema - Guardería Central</title>
-    <!-- Inclusión centralizada del head -->
     <jsp:include page="head.jsp" />
 </head>
 <body class="bg-light">
@@ -24,16 +23,23 @@
                 Lo sentimos, ha ocurrido un inconveniente al procesar su solicitud en el sistema.
             </p>
 
-            <%-- Opcional: Mostrar detalles técnicos solo si la excepción está presente --%>
-            <c:if test="${not empty pageContext.exception}">
-                <div class="alert alert-secondary text-start small mb-4" style="max-height: 150px; overflow-y: auto;">
-                    <strong>Detalle técnico:</strong>
-                    <code>${pageContext.exception}</code>
+            <c:if test="${not empty mensajeError}">
+                <div class="alert alert-danger text-start small mb-3">
+                    <c:out value="${mensajeError}"/>
+                </div>
+            </c:if>
+
+            <c:if test="${not empty errorMessage}">
+                <div class="alert alert-secondary text-start small mb-3">
+                    <c:if test="${not empty errorCode}">
+                        <strong><c:out value="${errorCode}"/></strong> -
+                    </c:if>
+                    <c:out value="${errorMessage}"/>
                 </div>
             </c:if>
 
             <div class="d-grid gap-2">
-                <a href="${pageContext.request.contextPath}/" class="btn btn-primary fw-bold">
+                <a href="<c:url value='/'/>" class="btn btn-primary fw-bold">
                     Volver al Inicio
                 </a>
             </div>

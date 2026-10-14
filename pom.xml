@@ -22,6 +22,13 @@
 	</properties>
 
 	<dependencies>
+
+		<!--Agregamos la dependencia de Spring Security:-->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+
 		<!-- Spring Boot Web (MVC para controladores y vistas) -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

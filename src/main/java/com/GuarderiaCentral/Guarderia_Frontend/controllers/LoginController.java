@@ -1,30 +1,42 @@
 package com.GuarderiaCentral.Guarderia_Frontend.controllers;
 
-
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import jakarta.servlet.http.HttpSession;
 
+/**
+ * Controlador encargado de servir la pantalla de login, la de acceso denegado
+ * y de redirigir la raíz del sitio.
+ */
 @Controller
 public class LoginController {
 
-    // Muestra la vista login.jsp cuando entran a /login o a la raíz
+    /**
+     * Muestra la pantalla de login.
+     *
+     * @return nombre de la vista login.jsp
+     */
     @GetMapping("/login")
-    public String mostrarLogin() {
-        return "login"; // Busca login.jsp en WEB-INF/jsp/
+    public String login() {
+        return "login";
     }
 
-    // Recibe los datos del formulario HTML por POST
-    @PostMapping("/do-login")
-    public String procesarLogin(@RequestParam("username") String username,
-                                @RequestParam("password") String password,
-                                HttpSession session) {
+    /**
+     * Muestra la pantalla de acceso denegado (403).
+     *
+     * @return nombre de la vista accesoDenegado.jsp
+     */
+    @GetMapping("/acceso-denegado")
+    public String accesoDenegado() {
+        return "accesoDenegado";
+    }
 
-        // Aquí después llamarás al BackendClientService para autenticarte
-        // Si es correcto, guardas el rol en la sesión: session.setAttribute("userRole", "ADMIN");
-
-        return "redirect:/dashboard"; // Redirige al panel principal
+    /**
+     * Redirige la raíz del sitio al login; si ya hay sesión, Spring Security lo manda al panel.
+     *
+     * @return redirección a /login
+     */
+    @GetMapping("/")
+    public String raiz() {
+        return "redirect:/login";
     }
 }
