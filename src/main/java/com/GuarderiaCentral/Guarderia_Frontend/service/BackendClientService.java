@@ -1,7 +1,5 @@
 package com.GuarderiaCentral.Guarderia_Frontend.service;
 
-
-
 import com.GuarderiaCentral.Guarderia_Frontend.exception.BackendException;
 import com.GuarderiaCentral.Guarderia_Frontend.security.UsuarioAutenticado;
 import lombok.extern.slf4j.Slf4j;
@@ -23,9 +21,18 @@ import java.util.Map;
 @Service
 public class BackendClientService {
 
+    private static final char COMILLA = '"';
+    private static final char BARRA = (char) 92;
+
     private final RestTemplate restTemplate;
     private final String backendApiUrl;
 
+    /**
+     * Crea el servicio de comunicación con el backend.
+     *
+     * @param restTemplate  cliente HTTP compartido
+     * @param backendApiUrl URL base de la API del backend (propiedad backend.api.url, termina en /api)
+     */
     public BackendClientService(RestTemplate restTemplate, @Value("${backend.api.url}") String backendApiUrl) {
         this.restTemplate = restTemplate;
         this.backendApiUrl = backendApiUrl;
@@ -34,9 +41,10 @@ public class BackendClientService {
     /**
      * Realiza el login hacia el Backend (petición pública no autenticada).
      *
-     * @param username Nombre de usuario.
-     * @param password Contraseña.
-     * @return Map con la respuesta JSON del backend (accessToken, tokenType y rol según el contrato).
+     * @param username nombre de usuario
+     * @param password contraseña
+     * @return Map con la respuesta JSON del backend (accessToken, tokenType y rol según el contrato)
+     * @throws BackendException si el backend responde con error o no se puede conectar
      */
     @SuppressWarnings("unchecked")
     public Map<String, Object> login(String username, String password) {
@@ -52,18 +60,21 @@ public class BackendClientService {
             return response.getBody();
         } catch (HttpStatusCodeException e) {
             log.error("Error HTTP al autenticar usuario {}: {}", username, e.getStatusCode());
-            throw new BackendException(e.getStatusCode().value(), "Credenciales inválidas o error de autenticación");
+            throw new BackendException(e.getStatusCode().value(),
+                    extraerMensaje(e, "Credenciales inválidas o error de autenticación"));
         } catch (Exception e) {
             log.error("Error de conexión con el backend durante login: {}", e.getMessage());
-            throw new BackendException(HttpStatus.INTERNAL_SERVER_ERROR.value(), "No se pudo conectar con el servidor backend");
+            throw new BackendException(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    "No se pudo conectar con el servidor backend");
         }
     }
 
     /**
      * Realiza una petición GET al Backend.
      *
-     * @param path Ruta relativa del endpoint (ej: "/socios/me").
-     * @return Objeto formateado (Map o List<Map>) según la respuesta JSON.
+     * @param path ruta relativa del endpoint (ej: "/socios/me")
+     * @return objeto (Map o List&lt;Map&gt;) según la respuesta JSON
+     * @throws BackendException si el backend responde con error
      */
     public Object get(String path) {
         return execute(path, HttpMethod.GET, null);
@@ -72,9 +83,10 @@ public class BackendClientService {
     /**
      * Realiza una petición POST al Backend.
      *
-     * @param path Ruta relativa del endpoint.
-     * @param body Cuerpo JSON del request.
-     * @return Objeto respuesta del backend.
+     * @param path ruta relativa del endpoint
+     * @param body cuerpo JSON del request
+     * @return objeto respuesta del backend
+     * @throws BackendException si el backend responde con error
      */
     public Object post(String path, Object body) {
         return execute(path, HttpMethod.POST, body);
@@ -83,9 +95,10 @@ public class BackendClientService {
     /**
      * Realiza una petición PUT al Backend.
      *
-     * @param path Ruta relativa del endpoint.
-     * @param body Cuerpo JSON del request.
-     * @return Objeto respuesta del backend.
+     * @param path ruta relativa del endpoint
+     * @param body cuerpo JSON del request
+     * @return objeto respuesta del backend
+     * @throws BackendException si el backend responde con error
      */
     public Object put(String path, Object body) {
         return execute(path, HttpMethod.PUT, body);
@@ -94,8 +107,9 @@ public class BackendClientService {
     /**
      * Realiza una petición DELETE al Backend.
      *
-     * @param path Ruta relativa del endpoint.
-     * @return Objeto respuesta del backend.
+     * @param path ruta relativa del endpoint
+     * @return objeto respuesta del backend (puede ser null)
+     * @throws BackendException si el backend responde con error
      */
     public Object delete(String path) {
         return execute(path, HttpMethod.DELETE, null);
@@ -103,6 +117,12 @@ public class BackendClientService {
 
     /**
      * Método genérico para ejecutar llamadas protegidas al Backend.
+     *
+     * @param path   ruta relativa del endpoint
+     * @param method método HTTP
+     * @param body   cuerpo del request (puede ser null)
+     * @return cuerpo de la respuesta
+     * @throws BackendException si el backend responde con error
      */
     private Object execute(String path, HttpMethod method, Object body) {
         String url = backendApiUrl + path;
@@ -122,13 +142,55 @@ public class BackendClientService {
             return response.getBody();
         } catch (HttpStatusCodeException e) {
             log.error("Error HTTP {} al llamar a {}: {}", e.getStatusCode(), url, e.getResponseBodyAsString());
-            throw new BackendException(e.getStatusCode().value(), e.getMessage());
+            throw new BackendException(e.getStatusCode().value(),
+                    extraerMensaje(e, "Error en el servicio backend"));
         } catch (Exception e) {
             log.error("Error inesperado en llamada HTTP a {}: {}", url, e.getMessage());
-            throw new BackendException(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error de comunicación con el servicio backend");
+            throw new BackendException(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    "Error de comunicación con el servicio backend");
         }
     }
 
+    /**
+     * Extrae el campo "message" del JSON de error del backend
+     * ({ timestamp, status, error, message, path }).
+     *
+     * @param e          excepción HTTP devuelta por el backend
+     * @param porDefecto mensaje a usar si el cuerpo no trae el campo message
+     * @return mensaje del backend o el mensaje por defecto
+     */
+    private String extraerMensaje(HttpStatusCodeException e, String porDefecto) {
+        String cuerpo = e.getResponseBodyAsString();
+        if (cuerpo == null || cuerpo.isBlank()) {
+            return porDefecto;
+        }
+        String clave = COMILLA + "message" + COMILLA;
+        int posClave = cuerpo.indexOf(clave);
+        if (posClave < 0) {
+            return porDefecto;
+        }
+        int dosPuntos = cuerpo.indexOf(':', posClave + clave.length());
+        if (dosPuntos < 0) {
+            return porDefecto;
+        }
+        int abre = cuerpo.indexOf(COMILLA, dosPuntos + 1);
+        if (abre < 0 || !cuerpo.substring(dosPuntos + 1, abre).isBlank()) {
+            return porDefecto;
+        }
+        StringBuilder mensaje = new StringBuilder();
+        for (int k = abre + 1; k < cuerpo.length(); k++) {
+            char c = cuerpo.charAt(k);
+            if (c == BARRA && k + 1 < cuerpo.length()) {
+                k++;
+                mensaje.append(cuerpo.charAt(k));
+            } else if (c == COMILLA) {
+                return mensaje.toString();
+            } else {
+                mensaje.append(c);
+            }
+        }
+        return porDefecto;
+    }
 
     /**
      * Obtiene el token JWT del usuario autenticado desde el contexto de seguridad.

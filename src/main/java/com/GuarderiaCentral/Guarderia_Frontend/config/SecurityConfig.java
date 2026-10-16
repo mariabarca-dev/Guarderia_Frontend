@@ -12,8 +12,9 @@ import org.springframework.security.web.SecurityFilterChain;
 /**
  * Configuración central de Spring Security del Frontend.
  * La autorización de rutas se hace únicamente aquí; no hay interceptores propios.
- * Las cabeceras anti-caché (Cache-Control, Pragma, Expires) se declaran explícitamente
- * para que, tras cerrar sesión, el botón "atrás" del navegador no muestre páginas protegidas.
+ * Las cabeceras anti-caché (Cache-Control, Pragma, Expires) son las que Spring Security
+ * envía por defecto, para que tras cerrar sesión el botón "atrás" del navegador
+ * no muestre páginas protegidas.
  */
 @Configuration
 @EnableWebSecurity
