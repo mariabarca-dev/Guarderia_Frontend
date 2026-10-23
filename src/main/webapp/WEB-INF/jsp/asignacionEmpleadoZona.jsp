@@ -1,193 +1,139 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 
-<%-- DECLARACIÓN DE BEANS Y VARIABLES DE SESIÓN PARA PREVENIR ADVERTENCIAS EN INTELLIJ --%>
-<jsp:useBean id="usuarioSesion" type="java.lang.Object" scope="session" />
+<%-- Vista compartida: ADMINISTRADOR (gestion-sectores) y EMPLEADO (mis-sectores, solo lectura, sin formulario).
+     Campos del back (AsignacionEmpleadoZonaResponse, PLANA): id, empleadoId, zonaId, cantVehiculosACargo, activo.
+     No trae la zona anidada. Si el controller quiere mostrar la letra, puede poner "zonaLetra" en cada fila. --%>
 
-<%-- Carga explícita del rol exacto del usuario desde la sesión --%>
-<c:set var="userRole" value="${sessionScope.userRole}" />
-
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <title>Dashboard - Asignaciones de Empleados a Zonas</title>
-    <!-- Inclusión centralizada del head (Favicon, Bootstrap y CSS personalizado) -->
-    <jsp:include page="head.jsp" />
-</head>
-<body class="bg-light">
-
-<!-- BARRA DE NAVEGACIÓN SUPERIOR -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow-sm">
-    <div class="container-fluid">
-        <a class="navbar-brand fw-bold" href="#">Panel de Gestión de Asignaciones (Empleado - Zona)</a>
-        <div class="d-flex align-items-center">
-            <span class="navbar-text me-3 text-light">
-                Usuario: <strong><c:out value="${usuarioSesion.nombre}" /></strong>
-                (<span class="badge bg-secondary"><c:out value="${userRole}" /></span>)
-            </span>
-
-            <!-- Cierre de sesión seguro vía POST con token CSRF -->
-            <form action="${pageContext.request.contextPath}/logout" method="POST" class="m-0">
+<%-- FORMULARIO CREAR / EDITAR (solo ADMINISTRADOR) --%>
+<c:if test="${(puedeCrear or puedeEditar) and not modoBajas}">
+    <details class="card shadow-sm mb-4" <c:if test="${not empty registro}">open</c:if>>
+        <summary class="card-header bg-dark text-white fw-bold">
+            <c:choose>
+                <c:when test="${not empty registro}">Editar asignación</c:when>
+                <c:otherwise>Asignar empleado a zona</c:otherwise>
+            </c:choose>
+        </summary>
+        <div class="card-body">
+            <c:choose>
+                <c:when test="${not empty registro}"><c:set var="accionForm" value="${rutaBase}/editar"/></c:when>
+                <c:otherwise><c:set var="accionForm" value="${rutaBase}/crear"/></c:otherwise>
+            </c:choose>
+            <form action="${pageContext.request.contextPath}${accionForm}" method="POST" class="row g-3" autocomplete="off">
                 <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
-                <button type="submit" class="btn btn-outline-danger btn-sm">Cerrar Sesión</button>
-            </form>
-        </div>
-    </div>
-</nav>
+                <c:if test="${not empty registro}">
+                    <input type="hidden" name="id" value="<c:out value='${registro.id}'/>"/>
+                </c:if>
 
-<div class="container-fluid px-4">
-
-    <!-- ALERTAS Y MENSAJES INFORMATIVOS DEL SERVIDOR -->
-    <c:if test="${not empty mensajeExito}">
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <strong>¡Éxito!</strong> <c:out value="${mensajeExito}" />
-        </div>
-    </c:if>
-    <c:if test="${not empty mensajeError}">
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <strong>Error:</strong> <c:out value="${mensajeError}" />
-        </div>
-    </c:if>
-
-    <!-- EVALUACIÓN DE ROLES CON JSTL: MATRIZ DE ACCESO A ENTIDADES DE NEGOCIO -->
-    <c:choose>
-        <%-- Acceso permitido únicamente a roles con lectura o gestión de Negocio --%>
-        <c:when test="${userRole == 'ADMINISTRADOR' || userRole == 'EMPLEADO' || userRole == 'SOCIO'}">
-
-            <!-- TARJETA PRINCIPAL: LISTADO Y REGISTRO DE ASIGNACIONES -->
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-dark text-white fw-bold d-flex justify-content-between align-items-center">
-                    <span>Listado de Asignaciones de Empleados por Zona</span>
-
-                        <%-- BOTÓN DE CREACIÓN: VISIBLE EXCLUSIVAMENTE PARA ADMINISTRADORES DE NEGOCIO --%>
-                    <c:if test="${userRole == 'ADMINISTRADOR'}">
-                        <form action="${pageContext.request.contextPath}/asignaciones/nueva" method="GET" class="m-0">
-                            <button type="submit" class="btn btn-success btn-sm">+ Asignar Empleado a Zona</button>
-                        </form>
+                <div class="col-md-4">
+                    <label for="empleadoId" class="form-label">ID del empleado</label>
+                    <input type="number" min="1" class="form-control" id="empleadoId" name="empleadoId" required
+                           value="<c:out value='${registro.empleadoId}'/>">
+                </div>
+                <div class="col-md-4">
+                    <label for="zonaId" class="form-label">ID de la zona</label>
+                    <input type="number" min="1" class="form-control" id="zonaId" name="zonaId" required
+                           value="<c:out value='${registro.zonaId}'/>">
+                </div>
+                <div class="col-md-4">
+                    <label for="cantVehiculosACargo" class="form-label">Vehículos a cargo</label>
+                    <input type="number" min="0" class="form-control" id="cantVehiculosACargo" name="cantVehiculosACargo" required
+                           value="<c:out value='${empty registro ? 0 : registro.cantVehiculosACargo}'/>">
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <c:choose>
+                            <c:when test="${not empty registro}">Guardar cambios</c:when>
+                            <c:otherwise>Asignar</c:otherwise>
+                        </c:choose>
+                    </button>
+                    <c:if test="${not empty registro}">
+                        <a href="${pageContext.request.contextPath}${rutaBase}" class="btn btn-secondary">Cancelar</a>
                     </c:if>
                 </div>
+            </form>
+        </div>
+    </details>
+</c:if>
 
-                <div class="card-body p-0">
-                    <c:choose>
-                        <c:when test="${not empty listaAsignaciones}">
-                            <div class="table-responsive">
-                                <table class="table table-hover table-striped mb-0 align-middle">
-                                    <thead class="table-light">
-                                    <tr>
-                                        <th>ID Empleado</th>
-                                        <th>Empleado</th>
-                                        <th>Zona Asignada</th>
-                                        <th>Tipo de Vehículo de Zona</th>
-                                        <th>Capacidad de Zona</th>
-                                        <th>Vehículos a Cargo</th>
-
-                                            <%-- COLUMNA DE ACCIONES SOLAMENTE PARA ADMINISTRADOR --%>
-                                        <c:if test="${userRole == 'ADMINISTRADOR'}">
-                                            <th class="text-end">Acciones</th>
+<%-- LISTADO --%>
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-dark text-white fw-bold d-flex justify-content-between align-items-center">
+        <span>
+            <c:out value="${empty titulo ? 'Asignaciones empleado-zona' : titulo}"/>
+            <c:if test="${modoBajas}"> (historial)</c:if>
+        </span>
+        <c:if test="${not empty rutaBase}">
+            <c:choose>
+                <c:when test="${modoBajas}">
+                    <a href="${pageContext.request.contextPath}${rutaBase}" class="btn btn-light btn-sm">Ver vigentes</a>
+                </c:when>
+                <c:otherwise>
+                    <a href="${pageContext.request.contextPath}${rutaBase}/historial" class="btn btn-light btn-sm">Ver historial</a>
+                </c:otherwise>
+            </c:choose>
+        </c:if>
+    </div>
+    <div class="card-body p-0">
+        <c:choose>
+            <c:when test="${not empty registros}">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped mb-0 align-middle">
+                        <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Empleado</th>
+                            <th>Zona</th>
+                            <th>Vehículos a cargo</th>
+                            <c:if test="${modoBajas}"><th>Estado</th></c:if>
+                            <c:if test="${not modoBajas and (puedeEditar or puedeEliminar)}"><th class="text-end">Acciones</th></c:if>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <c:forEach var="a" items="${registros}">
+                            <tr>
+                                <td><c:out value="${a.id}"/></td>
+                                <td>Empleado #<c:out value="${a.empleadoId}"/></td>
+                                <td>
+                                    <span class="badge bg-dark">
+                                        <c:choose>
+                                            <c:when test="${not empty a.zonaLetra}">Zona <c:out value="${a.zonaLetra}"/></c:when>
+                                            <c:otherwise>Zona #<c:out value="${a.zonaId}"/></c:otherwise>
+                                        </c:choose>
+                                    </span>
+                                </td>
+                                <td><span class="badge bg-primary"><c:out value="${a.cantVehiculosACargo}"/> vehículos</span></td>
+                                <c:if test="${modoBajas}">
+                                    <td>
+                                        <c:choose>
+                                            <c:when test="${a.activo == false}"><span class="badge bg-danger">Baja</span></c:when>
+                                            <c:otherwise><span class="badge bg-success">Activo</span></c:otherwise>
+                                        </c:choose>
+                                    </td>
+                                </c:if>
+                                <c:if test="${not modoBajas and (puedeEditar or puedeEliminar)}">
+                                    <td class="text-end">
+                                        <c:if test="${puedeEditar}">
+                                            <a href="${pageContext.request.contextPath}${rutaBase}/ver/${a.id}" class="btn btn-warning btn-sm">Editar</a>
                                         </c:if>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    <c:forEach var="asig" items="${listaAsignaciones}">
-                                        <tr>
-                                            <td>
-                                                    <span class="badge bg-secondary">
-                                                        <c:out value="${asig.empleado.id != null ? asig.empleado.id : 'N/A'}" />
-                                                    </span>
-                                            </td>
-                                            <td>
-                                                <strong>
-                                                    <c:out value="${asig.empleado.nombre != null ? asig.empleado.nombre : 'Sin Empleado'}" />
-                                                </strong>
-                                            </td>
-                                            <td>
-                                                    <span class="badge bg-dark fs-6">
-                                                        Zona <c:out value="${asig.zona.letra != null ? asig.zona.letra : 'N/A'}" />
-                                                    </span>
-                                            </td>
-                                            <td>
-                                                    <span class="badge bg-info text-dark">
-                                                        <c:out value="${asig.zona.tipoVehiculo != null ? asig.zona.tipoVehiculo : 'N/A'}" />
-                                                    </span>
-                                            </td>
-                                            <td>
-                                                <c:out value="${asig.zona.capacidadVehiculos}" /> lugares
-                                            </td>
-                                            <td>
-                                                    <span class="badge bg-primary fs-6">
-                                                        <c:out value="${asig.cantVehiculosACargo}" /> vehículos
-                                                    </span>
-                                            </td>
-
-                                                <%-- BOTONES DE EDICIÓN Y ELIMINACIÓN EXCLUSIVOS PARA ADMINISTRADOR --%>
-                                            <c:if test="${userRole == 'ADMINISTRADOR'}">
-                                                <td class="text-end">
-                                                    <!-- Formulario GET para pantalla de edición -->
-                                                    <form action="${pageContext.request.contextPath}/asignaciones/editar" method="GET" class="d-inline">
-                                                        <input type="hidden" name="empleadoId" value="${asig.empleado.id}">
-                                                        <input type="hidden" name="zonaId" value="${asig.zona.id}">
-                                                        <button type="submit" class="btn btn-warning btn-sm">Editar</button>
-                                                    </form>
-
-                                                    <!-- Formulario POST para eliminación con CSRF obligatorio -->
-                                                    <form action="${pageContext.request.contextPath}/asignaciones/eliminar" method="POST" class="d-inline">
-                                                        <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
-                                                        <input type="hidden" name="empleadoId" value="${asig.empleado.id}">
-                                                        <input type="hidden" name="zonaId" value="${asig.zona.id}">
-                                                        <button type="submit" class="btn btn-danger btn-sm">Desasignar</button>
-                                                    </form>
-                                                </td>
-                                            </c:if>
-                                        </tr>
-                                    </c:forEach>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </c:when>
-                        <c:otherwise>
-                            <div class="p-4 text-center text-muted">
-                                <p class="mb-0">No hay asignaciones de empleados a zonas registradas en el sistema.</p>
-                            </div>
-                        </c:otherwise>
-                    </c:choose>
+                                        <c:if test="${puedeEliminar}">
+                                            <form action="${pageContext.request.contextPath}${rutaBase}/eliminar" method="POST" class="d-inline">
+                                                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
+                                                <input type="hidden" name="id" value="<c:out value='${a.id}'/>"/>
+                                                <button type="submit" class="btn btn-danger btn-sm">Dar de baja</button>
+                                            </form>
+                                        </c:if>
+                                    </td>
+                                </c:if>
+                            </tr>
+                        </c:forEach>
+                        </tbody>
+                    </table>
                 </div>
-            </div>
-
-            <!-- FORMULARIO DE FILTRADO TRADICIONAL (CERO JAVASCRIPT) -->
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-light fw-bold">
-                    Filtrar Asignaciones
-                </div>
-                <div class="card-body">
-                    <form action="${pageContext.request.contextPath}/asignaciones/buscar" method="GET" class="row g-3">
-                        <div class="col-md-4">
-                            <label for="empleadoNombre" class="form-label">Nombre de Empleado</label>
-                            <input type="text" class="form-control" id="empleadoNombre" name="empleado.nombre" value="${param['empleado.nombre']}" placeholder="Ej. Juan Pérez">
-                        </div>
-                        <div class="col-md-4">
-                            <label for="zonaLetra" class="form-label">Letra de Zona</label>
-                            <input type="text" class="form-control" id="zonaLetra" name="zona.letra" value="${param['zona.letra']}" placeholder="Ej. A">
-                        </div>
-                        <div class="col-md-4 d-flex align-items-end">
-                            <button type="submit" class="btn btn-primary me-2">Buscar</button>
-                            <a href="${pageContext.request.contextPath}/asignaciones/dashboard" class="btn btn-secondary">Limpiar</a>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-        </c:when>
-
-        <%-- DENEGACIÓN DE ACCESO EN CASO DE SYSADMIN O ROL NO AUTORIZADO EN NEGOCIO --%>
-        <c:otherwise>
-            <div class="alert alert-danger shadow-sm" role="alert">
-                <h4 class="alert-heading">Acceso Restringido</h4>
-                <p class="mb-0">Su rol actual (<strong><c:out value="${userRole}" /></strong>) no posee permisos sobre las pantallas de gestión de negocio.</p>
-            </div>
-        </c:otherwise>
-    </c:choose>
-
+            </c:when>
+            <c:otherwise>
+                <div class="p-4 text-center text-muted">No hay asignaciones para mostrar.</div>
+            </c:otherwise>
+        </c:choose>
+    </div>
 </div>
-
-</body>
-</html>

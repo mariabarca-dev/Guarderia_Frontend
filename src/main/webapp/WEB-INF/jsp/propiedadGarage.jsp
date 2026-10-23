@@ -1,195 +1,169 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 
-<%-- Declaración de beans para compatibilidad en IDEs --%>
-<jsp:useBean id="usuarioSesion" type="java.lang.Object" scope="session" />
+<%-- Vista compartida: ADMINISTRADOR (gestion-compras) y SOCIO (mis-compras, solo lectura).
+     Campos del back (PropiedadGarageResponse): id, socioId, garageId, fechaCompraGarage, activo.
+     OJO: GET /propiedades-garage/socio/{id} devuelve GarageResponse (id, numeroGarage, zonaId, ...),
+     por eso la columna Garage tambien contempla numeroGarage. --%>
 
-<%-- Definición del rol de usuario desde la sesión --%>
-<c:set var="userRole" value="${sessionScope.userRole}" />
-
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <title>Gestión de Propiedades de Garages (Socio - Garage)</title>
-    <!-- Inclusión centralizada del head (Favicon, Bootstrap y CSS personalizado) -->
-    <jsp:include page="head.jsp" />
-</head>
-<body class="bg-light">
-
-<!-- BARRA DE NAVEGACIÓN SUPERIOR -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow-sm">
-    <div class="container-fluid">
-        <a class="navbar-brand fw-bold" href="${pageContext.request.contextPath}/dashboard">Panel de Propiedades de Garages</a>
-        <div class="d-flex align-items-center">
-            <span class="navbar-text me-3 text-light">
-                Usuario: <strong><c:out value="${usuarioSesion.nombre}" /></strong>
-                (<span class="badge bg-secondary"><c:out value="${userRole}" /></span>)
-            </span>
-            <!-- Cierre de sesión por formulario POST (Cero JS + Token CSRF) -->
-            <form action="${pageContext.request.contextPath}/logout" method="POST" class="m-0">
+<%-- FORMULARIO CREAR / EDITAR --%>
+<c:if test="${(puedeCrear or puedeEditar) and not modoBajas}">
+    <details class="card shadow-sm mb-4" <c:if test="${not empty registro}">open</c:if>>
+        <summary class="card-header bg-dark text-white fw-bold">
+            <c:choose>
+                <c:when test="${not empty registro}">Editar compra de garage</c:when>
+                <c:otherwise>Registrar compra de garage</c:otherwise>
+            </c:choose>
+        </summary>
+        <div class="card-body">
+            <c:choose>
+                <c:when test="${not empty registro}"><c:set var="accionForm" value="${rutaBase}/editar"/></c:when>
+                <c:otherwise><c:set var="accionForm" value="${rutaBase}/crear"/></c:otherwise>
+            </c:choose>
+            <form action="${pageContext.request.contextPath}${accionForm}" method="POST" class="row g-3" autocomplete="off">
                 <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
-                <button type="submit" class="btn btn-outline-danger btn-sm">Cerrar Sesión</button>
+                <c:if test="${not empty registro}">
+                    <input type="hidden" name="id" value="<c:out value='${registro.id}'/>"/>
+                </c:if>
+
+                <div class="col-md-4">
+                    <label for="socioId" class="form-label">ID del socio</label>
+                    <input type="number" min="1" class="form-control" id="socioId" name="socioId" required
+                           value="<c:out value='${registro.socioId}'/>">
+                </div>
+                <div class="col-md-4">
+                    <label for="garageId" class="form-label">ID del garage</label>
+                    <input type="number" min="1" class="form-control" id="garageId" name="garageId" required
+                           value="<c:out value='${registro.garageId}'/>">
+                </div>
+                <div class="col-md-4">
+                    <label for="fechaCompraGarage" class="form-label">Fecha de compra</label>
+                    <input type="date" class="form-control" id="fechaCompraGarage" name="fechaCompraGarage" required
+                           value="<c:out value='${registro.fechaCompraGarage}'/>">
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <c:choose>
+                            <c:when test="${not empty registro}">Guardar cambios</c:when>
+                            <c:otherwise>Registrar</c:otherwise>
+                        </c:choose>
+                    </button>
+                    <c:if test="${not empty registro}">
+                        <a href="${pageContext.request.contextPath}${rutaBase}" class="btn btn-secondary">Cancelar</a>
+                    </c:if>
+                </div>
+            </form>
+        </div>
+    </details>
+</c:if>
+
+<%-- LISTADO --%>
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-dark text-white fw-bold d-flex justify-content-between align-items-center">
+        <span>
+            <c:out value="${empty titulo ? 'Compras de garages' : titulo}"/>
+            <c:if test="${modoBajas}"> (dadas de baja)</c:if>
+        </span>
+        <c:if test="${not empty rutaBase}">
+            <c:choose>
+                <c:when test="${modoBajas}">
+                    <a href="${pageContext.request.contextPath}${rutaBase}" class="btn btn-light btn-sm">Ver activas</a>
+                </c:when>
+                <c:otherwise>
+                    <a href="${pageContext.request.contextPath}${rutaBase}/bajas" class="btn btn-light btn-sm">Ver bajas</a>
+                </c:otherwise>
+            </c:choose>
+        </c:if>
+    </div>
+    <div class="card-body p-0">
+        <c:choose>
+            <c:when test="${not empty registros}">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped mb-0 align-middle">
+                        <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Socio</th>
+                            <th>Garage</th>
+                            <th>Fecha de compra</th>
+                            <c:if test="${modoBajas}"><th>Estado</th></c:if>
+                            <c:if test="${not modoBajas and (puedeEditar or puedeEliminar)}"><th class="text-end">Acciones</th></c:if>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <c:forEach var="p" items="${registros}">
+                            <tr>
+                                <td><c:out value="${p.id}"/></td>
+                                <td>
+                                    <c:choose>
+                                        <c:when test="${not empty p.socioId}">Socio #<c:out value="${p.socioId}"/></c:when>
+                                        <c:otherwise><em class="text-muted">-</em></c:otherwise>
+                                    </c:choose>
+                                </td>
+                                <td>
+                                    <span class="badge bg-dark">
+                                        <c:choose>
+                                            <c:when test="${not empty p.garageId}">Garage #<c:out value="${p.garageId}"/></c:when>
+                                            <c:otherwise>Garage N° <c:out value="${p.numeroGarage}"/></c:otherwise>
+                                        </c:choose>
+                                    </span>
+                                </td>
+                                <td>
+                                    <c:choose>
+                                        <c:when test="${not empty p.fechaCompraGarage}"><c:out value="${p.fechaCompraGarage}"/></c:when>
+                                        <c:otherwise><em class="text-muted">Sin fecha</em></c:otherwise>
+                                    </c:choose>
+                                </td>
+                                <c:if test="${modoBajas}">
+                                    <td>
+                                        <c:choose>
+                                            <c:when test="${p.activo == false}"><span class="badge bg-danger">Baja</span></c:when>
+                                            <c:otherwise><span class="badge bg-success">Activo</span></c:otherwise>
+                                        </c:choose>
+                                    </td>
+                                </c:if>
+                                <c:if test="${not modoBajas and (puedeEditar or puedeEliminar)}">
+                                    <td class="text-end">
+                                        <c:if test="${puedeEditar}">
+                                            <a href="${pageContext.request.contextPath}${rutaBase}/ver/${p.id}" class="btn btn-warning btn-sm">Editar</a>
+                                        </c:if>
+                                        <c:if test="${puedeEliminar}">
+                                            <form action="${pageContext.request.contextPath}${rutaBase}/eliminar" method="POST" class="d-inline">
+                                                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
+                                                <input type="hidden" name="id" value="<c:out value='${p.id}'/>"/>
+                                                <button type="submit" class="btn btn-danger btn-sm">Dar de baja</button>
+                                            </form>
+                                        </c:if>
+                                    </td>
+                                </c:if>
+                            </tr>
+                        </c:forEach>
+                        </tbody>
+                    </table>
+                </div>
+            </c:when>
+            <c:otherwise>
+                <div class="p-4 text-center text-muted">No hay compras de garages para mostrar.</div>
+            </c:otherwise>
+        </c:choose>
+    </div>
+</div>
+
+<%-- BUSQUEDA POR SOCIO (solo gestion del ADMINISTRADOR) --%>
+<c:if test="${not empty rutaBase and not modoBajas}">
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light fw-bold">Buscar garages de un socio</div>
+        <div class="card-body">
+            <form action="${pageContext.request.contextPath}${rutaBase}/de-socio" method="GET" class="row g-3">
+                <div class="col-md-4">
+                    <label for="busSocio" class="form-label">ID del socio</label>
+                    <input type="number" min="1" class="form-control" id="busSocio" name="socioId" required>
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">Buscar</button>
+                    <a href="${pageContext.request.contextPath}${rutaBase}" class="btn btn-secondary">Limpiar</a>
+                </div>
             </form>
         </div>
     </div>
-</nav>
-
-<div class="container-fluid px-4">
-
-    <!-- MENSAJES DE ERROR Y ÉXITO ENVIADOS POR EL CONTROLADOR -->
-    <c:if test="${not empty mensajeExito}">
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <strong>¡Éxito!</strong> <c:out value="${mensajeExito}" />
-        </div>
-    </c:if>
-    <c:if test="${not empty mensajeError}">
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <strong>Error:</strong> <c:out value="${mensajeError}" />
-        </div>
-    </c:if>
-
-    <!-- EVALUACIÓN DE ROLES PARA ENTIDAD DE NEGOCIO -->
-    <c:choose>
-        <%-- ROLES AUTORIZADOS A VER LA PANTALLA DE NEGOCIO (ADMINISTRADOR, SOCIO, EMPLEADO) --%>
-        <c:when test="${userRole == 'ADMINISTRADOR' || userRole == 'SOCIO' || userRole == 'EMPLEADO'}">
-
-            <!-- TARJETA PRINCIPAL: LISTADO Y REGISTRO DE PROPIEDADES DE GARAGE -->
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-dark text-white fw-bold d-flex justify-content-between align-items-center">
-                    <span>Listado de Propiedades de Garages por Socio</span>
-
-                        <%-- BOTÓN DE REGISTRO: VISIBLE EXCLUSIVAMENTE PARA ADMINISTRADORES --%>
-                    <c:if test="${userRole == 'ADMINISTRADOR'}">
-                        <a href="${pageContext.request.contextPath}/propiedades-garage/nueva" class="btn btn-success btn-sm">+ Registrar Nueva Propiedad</a>
-                    </c:if>
-                </div>
-
-                <div class="card-body p-0">
-                    <c:choose>
-                        <c:when test="${not empty listaPropiedadesGarage}">
-                            <div class="table-responsive">
-                                <table class="table table-hover table-striped mb-0 align-middle">
-                                    <thead class="table-light">
-                                    <tr>
-                                        <th>ID Socio</th>
-                                        <th>Socio Propietario</th>
-                                        <th>Garage (ID / N°)</th>
-                                        <th>Zona</th>
-                                        <th>Fecha de Compra</th>
-                                            <%-- COLUMNA DE ACCIONES SOLAMENTE PARA ADMINISTRADOR --%>
-                                        <c:if test="${userRole == 'ADMINISTRADOR'}">
-                                            <th class="text-end">Acciones</th>
-                                        </c:if>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    <c:forEach var="prop" items="${listaPropiedadesGarage}">
-                                        <tr>
-                                            <td>
-                                                    <span class="badge bg-secondary">
-                                                        <c:out value="${prop.socioId}" />
-                                                    </span>
-                                            </td>
-                                            <td>
-                                                <strong><c:out value="${prop.socioNombre}" /></strong>
-                                            </td>
-                                            <td>
-                                                    <span class="badge bg-dark fs-6">
-                                                        Garage #<c:out value="${prop.garageNumero != null ? prop.garageNumero : prop.garageId}" />
-                                                    </span>
-                                            </td>
-                                            <td>
-                                                <c:choose>
-                                                    <c:when test="${not empty prop.zonaLetra}">
-                                                            <span class="badge bg-info text-dark">
-                                                                Zona <c:out value="${prop.zonaLetra}" />
-                                                            </span>
-                                                    </c:when>
-                                                    <c:otherwise>
-                                                        <em class="text-muted">Sin Zona</em>
-                                                    </c:otherwise>
-                                                </c:choose>
-                                            </td>
-                                            <td>
-                                                <c:choose>
-                                                    <c:when test="${not empty prop.fechaCompra}">
-                                                            <span class="badge bg-light text-dark border">
-                                                                <c:out value="${prop.fechaCompra}" />
-                                                            </span>
-                                                    </c:when>
-                                                    <c:otherwise>
-                                                        <em class="text-muted">Sin Fecha</em>
-                                                    </c:otherwise>
-                                                </c:choose>
-                                            </td>
-                                                <%-- ACCIONES EXCLUSIVAS PARA EL ROL ADMINISTRADOR --%>
-                                            <c:if test="${userRole == 'ADMINISTRADOR'}">
-                                            <td class="text-end">
-                                                <form action="${pageContext.request.contextPath}/propiedades-garage/editar" method="GET" class="d-inline">
-                                                    <input type="hidden" name="id" value="${prop.id}">
-                                                    <button type="submit" class="btn btn-warning btn-sm">Editar</button>
-                                                </form>
-                                                <form action="${pageContext.request.contextPath}/propiedades-garage/eliminar" method="POST" class="d-inline">
-                                                    <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
-                                                    <input type="hidden" name="id" value="${prop.id}">
-                                                    <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
-                                                </form>
-                                            </td>
-                                            </c:if>
-                                        </tr>
-                                    </c:forEach>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </c:when>
-                        <c:otherwise>
-                            <div class="p-4 text-center text-muted">
-                                <p class="mb-0">No hay registros de propiedades de garages en el sistema.</p>
-                            </div>
-                        </c:otherwise>
-                    </c:choose>
-                </div>
-            </div>
-
-            <!-- FORMULARIO DE FILTRADO / BÚSQUEDA TRADICIONAL (CERO JAVASCRIPT) -->
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-light fw-bold">
-                    Filtrar Propiedades
-                </div>
-                <div class="card-body">
-                    <form action="${pageContext.request.contextPath}/propiedades-garage/buscar" method="GET" class="row g-3">
-                        <div class="col-md-3">
-                            <label for="socioNombre" class="form-label">Nombre del Socio</label>
-                            <input type="text" class="form-control" id="socioNombre" name="socioNombre" value="${param.socioNombre}" placeholder="Ej. Carlos Pérez">
-                        </div>
-                        <div class="col-md-3">
-                            <label for="garageId" class="form-label">ID / N° Garage</label>
-                            <input type="number" class="form-control" id="garageId" name="garageId" value="${param.garageId}" placeholder="Ej. 101">
-                        </div>
-                        <div class="col-md-3">
-                            <label for="fechaCompra" class="form-label">Fecha de Compra</label>
-                            <input type="date" class="form-control" id="fechaCompra" name="fechaCompra" value="${param.fechaCompra}">
-                        </div>
-                        <div class="col-md-3 d-flex align-items-end">
-                            <button type="submit" class="btn btn-primary me-2">Buscar</button>
-                            <a href="${pageContext.request.contextPath}/propiedades-garage" class="btn btn-secondary">Limpiar</a>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-        </c:when>
-
-        <%-- DENEGACIÓN DE ACCESO SI ES SYSADMIN U OTRO ROL NO PERMITIDO EN NEGOCIO --%>
-        <c:otherwise>
-            <div class="alert alert-danger shadow-sm" role="alert">
-                <h4 class="alert-heading">Acceso Restringido</h4>
-                <p class="mb-0">Su rol actual (<strong><c:out value="${userRole}" /></strong>) no está autorizado para acceder a las pantallas de gestión de entidades de negocio.</p>
-            </div>
-        </c:otherwise>
-    </c:choose>
-
-</div>
-
-</body>
-</html>
+</c:if>
