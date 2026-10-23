@@ -5,6 +5,9 @@ package com.GuarderiaCentral.Guarderia_Frontend.exception;
  */
 public class BackendException extends RuntimeException {
 
+    /** Código usado cuando el back no responde (no hay respuesta HTTP real). */
+    public static final int SIN_CONEXION = 503;
+
     private final int status;
 
     /**

@@ -1,36 +1,40 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" pageEncoding="UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <title>Panel Principal - Guardería Central</title>
-    <!-- Inclusión centralizada del head (Favicon, Bootstrap y CSS personalizado) -->
-    <jsp:include page="head.jsp" />
-</head>
-<body class="bg-light">
-
-    <!-- Navbar común para todos -->
-    <nav class="navbar navbar-dark bg-dark px-4">
-        <span class="navbar-brand">Guardería Central - Rol: ${sessionScope.userRole}</span>
-        <a href="/logout" class="btn btn-outline-light btn-sm">Cerrar Sesión</a>
-    </nav>
-
-    <div class="container mt-4">
-        <c:choose>
-            <c:when test="${sessionScope.userRole == 'SYSADMIN'}">
-                <jsp:include page="dash/sysadmin-panel.jsp" />
-            </c:when>
-            <c:when test="${sessionScope.userRole == 'ADMIN'}">
-                <jsp:include page="dash/admin-panel.jsp" />
-            </c:when>
-            <c:when test="${sessionScope.userRole == 'EMPLEADO'}">
-                <jsp:include page="dash/empleado-panel.jsp" />
-            </c:when>
-            <c:otherwise>
-                <jsp:include page="dash/socio-panel.jsp" />
-            </c:otherwise>
-        </c:choose>
+<%-- Panel de inicio, igual para todos los roles. "registro" = GET /usuarios/me (UsuarioResponse). --%>
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-dark text-white fw-bold">
+                Bienvenido/a, <c:out value="${registro.nombre}"/> <c:out value="${registro.apellido}"/>
+            </div>
+            <div class="card-body">
+                <h6 class="text-muted mb-3">Datos de tu cuenta</h6>
+                <table class="table table-striped mb-0">
+                    <tbody>
+                    <tr><th class="w-25">Usuario</th><td><c:out value="${registro.nombreUsuario}"/></td></tr>
+                    <tr><th>Nombre</th><td><c:out value="${registro.nombre}"/> <c:out value="${registro.apellido}"/></td></tr>
+                    <tr><th>DNI</th><td><c:out value="${empty registro.dni ? '-' : registro.dni}"/></td></tr>
+                    <tr><th>Rol</th><td><span class="badge bg-secondary"><c:out value="${registro.rol}"/></span></td></tr>
+                    <tr>
+                        <th>Estado</th>
+                        <td>
+                            <c:choose>
+                                <c:when test="${registro.activo}"><span class="badge bg-success">Activo</span></c:when>
+                                <c:otherwise><span class="badge bg-danger">Baja</span></c:otherwise>
+                            </c:choose>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
-
-</body>
-</html>
+    <div class="col-lg-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-secondary text-white fw-bold">Accesos</div>
+            <div class="card-body">
+                <p class="mb-0 text-muted">Elegí una opción del menú para empezar.</p>
+            </div>
+        </div>
+    </div>
+</div>
