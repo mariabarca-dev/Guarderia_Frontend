@@ -1,6 +1,6 @@
 package com.GuarderiaCentral.Guarderia_Frontend.security;
 
-import com.GuarderiaCentral.Guarderia_Frontend.client.BackendClientService;
+import com.GuarderiaCentral.Guarderia_Frontend.service.BackendClientService;
 import com.GuarderiaCentral.Guarderia_Frontend.client.BackendException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationProvider;

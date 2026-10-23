@@ -1,6 +1,5 @@
 package com.GuarderiaCentral.Guarderia_Frontend.security;
 
-import com.GuarderiaCentral.Guarderia_Frontend.client.BackendClientService;
 import com.GuarderiaCentral.Guarderia_Frontend.client.BackendException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -8,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.stereotype.Component;
+import com.GuarderiaCentral.Guarderia_Frontend.service.BackendClientService;
 
 /**
  * Al cerrar sesión en el front, cierra también la sesión del back ({@code POST /auth/logout}).
