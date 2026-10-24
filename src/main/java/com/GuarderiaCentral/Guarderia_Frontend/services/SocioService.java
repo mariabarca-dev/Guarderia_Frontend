@@ -1,6 +1,6 @@
-package com.GuarderiaCentral.Guarderia_Frontend.service;
+package com.GuarderiaCentral.Guarderia_Frontend.services;
 
-import com.GuarderiaCentral.Guarderia_Frontend.service.BackendClientService;
+import com.GuarderiaCentral.Guarderia_Frontend.client.BackendClientService;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;

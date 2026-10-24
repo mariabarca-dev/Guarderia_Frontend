@@ -1,7 +1,6 @@
-package com.GuarderiaCentral.Guarderia_Frontend.service;
+package com.GuarderiaCentral.Guarderia_Frontend.client;
 
 import com.GuarderiaCentral.Guarderia_Frontend.security.UsuarioAutenticado;
-import com.GuarderiaCentral.Guarderia_Frontend.client.BackendException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;

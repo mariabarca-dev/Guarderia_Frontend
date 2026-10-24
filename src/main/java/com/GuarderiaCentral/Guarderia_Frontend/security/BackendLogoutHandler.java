@@ -7,7 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.stereotype.Component;
-import com.GuarderiaCentral.Guarderia_Frontend.service.BackendClientService;
+import com.GuarderiaCentral.Guarderia_Frontend.client.BackendClientService;
 
 /**
  * Al cerrar sesión en el front, cierra también la sesión del back ({@code POST /auth/logout}).
