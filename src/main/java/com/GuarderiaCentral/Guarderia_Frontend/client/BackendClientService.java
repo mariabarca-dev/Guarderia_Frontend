@@ -15,7 +15,10 @@ import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriUtils;
 
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -176,6 +179,41 @@ public class BackendClientService {
     }
 
     /**
+     * GET al back cuando la respuesta es un arreglo JSON.
+     *
+     * @param path ruta relativa a backend.api.url
+     * @return lista de registros (cada uno es un Map con los campos del JSON)
+     * @throws BackendException si el back responde con error o no responde
+     */
+    @SuppressWarnings("unchecked")
+    public List<Map<String, Object>> getLista(String path) {
+        return (List<Map<String, Object>>) get(path);
+    }
+
+    /**
+     * GET al back cuando la respuesta es un objeto JSON.
+     *
+     * @param path ruta relativa a backend.api.url
+     * @return el registro como Map con los campos del JSON
+     * @throws BackendException si el back responde con error o no responde
+     */
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> getMapa(String path) {
+        return (Map<String, Object>) get(path);
+    }
+
+    /**
+     * Codifica un valor escrito por el usuario para usarlo como tramo de una ruta
+     * (por ejemplo una matrícula o un DNI). Los IDs numéricos no necesitan codificarse.
+     *
+     * @param valor texto a codificar
+     * @return el valor codificado para URL
+     */
+    public static String segmento(String valor) {
+        return UriUtils.encodePathSegment(valor, StandardCharsets.UTF_8);
+    }
+
+    /**
      * Arma el cuerpo JSON de un crear/editar tomando del formulario SOLO los campos indicados
      * (los nombres exactos de la clase Request/Update del back). Descarta el resto
      * (por ejemplo {@code _csrf} o {@code id}) y convierte los campos vacíos en null,
@@ -210,8 +248,9 @@ public class BackendClientService {
 
         try {
             log.debug("HTTP {} {}", method, path);
+            // URI ya armada: los valores del usuario se codifican antes con segmento(), así no se codifican dos veces
             ResponseEntity<Object> respuesta = restTemplate.exchange(
-                    backendApiUrl + path, method, new HttpEntity<>(body, headers), Object.class);
+                    URI.create(backendApiUrl + path), method, new HttpEntity<>(body, headers), Object.class);
             return respuesta.getBody();
         } catch (RestClientException e) {
             throw traducir(e, path, method);
