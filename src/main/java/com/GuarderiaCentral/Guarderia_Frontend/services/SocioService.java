@@ -59,13 +59,13 @@ public class SocioService {
 
     public Object crearSocio(Map<String, String> formulario) {
         Map<String, Object> body = BackendClientService.armarCuerpo(formulario,
-                "dni", "nombre", "apellido", "direccion", "telefono", "nombreUsuario", "clave");
+                "dni", "nombre", "apellido", "direccion", "telefono", "fechaIngreso", "nombreUsuario", "clave");
         return backendClientService.post("/usuarios/socios", body);
     }
 
     public Object editarSocio(Integer id, Map<String, String> formulario) {
         Map<String, Object> body = BackendClientService.armarCuerpo(formulario,
-                "dni", "nombre", "apellido", "direccion", "telefono", "nombreUsuario");
+                "dni", "nombre", "apellido", "direccion", "telefono", "fechaIngreso", "nombreUsuario");
         return backendClientService.put("/usuarios/socios/" + id, body);
     }
 

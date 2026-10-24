@@ -40,6 +40,13 @@
                     <label class="form-label text-muted mb-0">Teléfono</label>
                     <p class="fw-bold mb-0"><c:out value="${empty datosSocio.telefono ? '-' : datosSocio.telefono}"/></p>
                 </div>
+                    <div class="col-md-4">
+                        <label for="fechaIngreso" class="form-label">Fecha de ingreso</label>
+                        <input type="date" class="form-control" id="fechaIngreso" name="fechaIngreso" required
+                               value="<c:out value='${registro.fechaIngreso}'/>">
+                    </div>
+
+
             </div>
         </div>
     </div>

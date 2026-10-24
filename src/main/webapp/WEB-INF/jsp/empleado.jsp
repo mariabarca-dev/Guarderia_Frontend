@@ -74,11 +74,11 @@
                     <c:if test="${not empty registro}">
                         <input type="hidden" name="id" value="<c:out value='${registro.id}'/>"/>
                     </c:if>
-                    <div class="col-md-4">
-                        <label for="codigoEmpleado" class="form-label">Código de empleado</label>
-                        <input type="text" class="form-control" id="codigoEmpleado" name="codigoEmpleado" maxlength="30" required
-                               value="<c:out value='${not empty registro.codigoEmpleado ? registro.codigoEmpleado : registro.codigo}'/>">
-                    </div>
+                      <div class="col-md-4"> /// ESTO CAMBIE "codigo"
+                                          <label for="codigo" class="form-label">Código de empleado</label>
+                                          <input type="text" class="form-control" id="codigo" name="codigo" maxlength="30" required
+                                                 value="<c:out value='${not empty registro.codigoEmpleado ? registro.codigoEmpleado : registro.codigo}'/>">
+                                      </div>
                     <div class="col-md-4">
                         <label for="nombre" class="form-label">Nombre</label>
                         <input type="text" class="form-control" id="nombre" name="nombre" maxlength="100" required

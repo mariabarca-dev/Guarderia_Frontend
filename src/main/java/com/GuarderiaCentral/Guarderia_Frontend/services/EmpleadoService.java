@@ -47,13 +47,13 @@ public class EmpleadoService {
 
     public Object crearEmpleado(Map<String, String> formulario) {
         Map<String, Object> body = BackendClientService.armarCuerpo(formulario,
-                "codigoEmpleado", "nombre", "apellido", "especialidad", "direccion", "telefono", "dni", "nombreUsuario", "clave");
+                "codigo", "nombre", "apellido", "especialidad", "direccion", "telefono", "dni", "nombreUsuario", "clave");
         return backendClientService.post("/usuarios/empleados", body);
     }
 
     public Object editarEmpleado(Integer id, Map<String, String> formulario) {
         Map<String, Object> body = BackendClientService.armarCuerpo(formulario,
-                "codigoEmpleado", "nombre", "apellido", "especialidad", "direccion", "telefono", "dni", "nombreUsuario");
+                "codigo", "nombre", "apellido", "especialidad", "direccion", "telefono", "dni", "nombreUsuario");
         return backendClientService.put("/usuarios/empleados/" + id, body);
     }
 
