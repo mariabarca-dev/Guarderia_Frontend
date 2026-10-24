@@ -9,4 +9,5 @@
             <button type="submit" class="btn btn-outline-light btn-sm">Salir</button>
         </form>
     </li>
+    <li class="nav-item"><a class="nav-link text-white" href="${pageContext.request.contextPath}/administrador/cuentas-administradores">Cuentas Administradores</a></li>
 </ul>

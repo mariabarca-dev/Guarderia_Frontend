@@ -32,92 +32,97 @@ public class UsuarioController {
         this.administradorService = administradorService;
     }
 
+    // ------------------------------------------------------------------ CONSULTAS EXTRA DE SOCIOS (ADMINISTRADOR)
 
-
-
-
-    // ------------------------------------------------------------------ GESTIÓN CUENTAS ADMINISTRADORES (SYSADMIN)
-
-    @GetMapping("/sysadmin/cuentas-administradores")
-    public String listarCuentasAdministradores(Model model) {
-        model.addAttribute("registros", administradorService.listarAdministradores());
-        model.addAttribute("rutaBase", "/sysadmin/cuentas-administradores");
+    /** Carga socio.jsp con la lista de socios y, opcionalmente, un registro o el resultado de una consulta. */
+    private String vistaCuentasSocios(Model model, Object registro, Object resultado, String tituloResultado) {
+        model.addAttribute("registros", socioService.listarSocios());
+        if (registro != null) {
+            model.addAttribute("registro", registro);
+        }
+        if (resultado != null) {
+            model.addAttribute("resultado", resultado);
+            model.addAttribute("tituloResultado", tituloResultado);
+        }
+        model.addAttribute("rutaBase", "/administrador/cuentas-socios");
         model.addAttribute("puedeCrear", true);
         model.addAttribute("puedeEditar", true);
         model.addAttribute("puedeEliminar", true);
         model.addAttribute("modoBajas", false);
-        model.addAttribute("vista", "administrador"); // Vista específica o genérica
+        model.addAttribute("vista", "socio");
         return "layout";
     }
 
-    @PostMapping("/sysadmin/cuentas-administradores/crear")
-    public String crearCuentaAdministrador(@RequestParam Map<String, String> params, RedirectAttributes redirect) {
-        administradorService.crearAdministrador(params);
-        redirect.addFlashAttribute("mensajeExito", "Administrador registrado correctamente.");
-        return "redirect:/sysadmin/cuentas-administradores";
-    }
-
-    @PostMapping("/sysadmin/cuentas-administradores/editar")
-    public String editarCuentaAdministrador(@RequestParam Integer id, @RequestParam Map<String, String> params, RedirectAttributes redirect) {
-        administradorService.editarAdministrador(id, params);
-        redirect.addFlashAttribute("mensajeExito", "Datos del administrador actualizados.");
-        return "redirect:/sysadmin/cuentas-administradores";
-    }
-
-    @PostMapping("/sysadmin/cuentas-administradores/eliminar")
-    public String eliminarCuentaAdministrador(@RequestParam Integer id, RedirectAttributes redirect) {
-        administradorService.eliminarAdministrador(id);
-        redirect.addFlashAttribute("mensajeExito", "Administrador dado de baja.");
-        return "redirect:/sysadmin/cuentas-administradores";
-    }
-
-    // ------------------------------------------------------------------ CONSULTAS EXTRA Y ACCIONES DE SOCIOS/EMPLEADOS
-
     @GetMapping("/administrador/cuentas-socios/{id}/sus-rodados")
-    @ResponseBody
-    public Object susRodados(@PathVariable Integer id) {
-        return socioService.obtenerVehiculosDeSocio(id);
+    public String susRodados(@PathVariable Integer id, Model model) {
+        return vistaCuentasSocios(model, null, socioService.obtenerVehiculosDeSocio(id), "Rodados del socio " + id);
     }
 
     @GetMapping("/administrador/cuentas-socios/{id}/sus-cocheras")
-    @ResponseBody
-    public Object susCocheras(@PathVariable Integer id) {
-        return socioService.obtenerGaragesDeSocio(id);
+    public String susCocheras(@PathVariable Integer id, Model model) {
+        return vistaCuentasSocios(model, null, socioService.obtenerGaragesDeSocio(id), "Cocheras del socio " + id);
     }
 
     @GetMapping("/administrador/cuentas-socios/buscar-documento/{dni}")
-    @ResponseBody
-    public Object buscarDocumento(@PathVariable String dni) {
-        return socioService.buscarSocioPorDni(dni);
+    public String buscarDocumento(@PathVariable String dni, Model model) {
+        return vistaCuentasSocios(model, socioService.buscarSocioPorDni(dni), null, null);
+    }
+
+    /** RUTA EXTRA: un formulario GET no puede armar "/buscar-documento/{dni}", así que recibe ?dni= y redirige a la ruta del prompt. */
+    @GetMapping("/administrador/cuentas-socios/buscar-documento")
+    public String buscarDocumentoDesdeFormulario(@RequestParam String dni) {
+        return "redirect:/administrador/cuentas-socios/buscar-documento/" + UriUtils.encodePathSegment(dni, StandardCharsets.UTF_8);
+    }
+
+    // ------------------------------------------------------------------ CONSULTAS EXTRA DE EMPLEADOS (ADMINISTRADOR)
+
+    /** Carga empleado.jsp con la lista de empleados y el resultado de una consulta. */
+    private String vistaCuentasEmpleados(Model model, Object resultado, String tituloResultado, Integer encargosDe) {
+        model.addAttribute("registros", empleadoService.listarEmpleados());
+        model.addAttribute("resultado", resultado);
+        model.addAttribute("tituloResultado", tituloResultado);
+        if (encargosDe != null) {
+            model.addAttribute("resultadoEncargosDe", encargosDe);
+        }
+        model.addAttribute("rutaBase", "/administrador/cuentas-empleados");
+        model.addAttribute("puedeCrear", true);
+        model.addAttribute("puedeEditar", true);
+        model.addAttribute("puedeEliminar", true);
+        model.addAttribute("modoBajas", false);
+        model.addAttribute("vista", "empleado");
+        return "layout";
     }
 
     @GetMapping("/administrador/cuentas-empleados/{id}/sus-sectores")
-    @ResponseBody
-    public Object susSectores(@PathVariable Integer id) {
-        return empleadoService.obtenerSectoresDeEmpleado(id);
+    public String susSectores(@PathVariable Integer id, Model model) {
+        return vistaCuentasEmpleados(model, empleadoService.obtenerSectoresDeEmpleado(id), "Sectores del empleado " + id, null);
     }
 
     @GetMapping("/administrador/cuentas-empleados/{id}/sus-encargos")
-    @ResponseBody
-    public Object susEncargos(@PathVariable Integer id) {
-        return empleadoService.obtenerEncargosDeEmpleado(id);
+    public String susEncargos(@PathVariable Integer id, Model model) {
+        return vistaCuentasEmpleados(model, empleadoService.obtenerEncargosDeEmpleado(id), "Vehículos a cargo del empleado " + id, id);
     }
 
     @PostMapping("/administrador/cuentas-empleados/{id}/encargar/{vehiculoId}")
     public String encargar(@PathVariable Integer id, @PathVariable Integer vehiculoId, RedirectAttributes redirect) {
         empleadoService.encargarVehiculo(id, vehiculoId);
         redirect.addFlashAttribute("mensajeExito", "Vehículo encargado exitosamente.");
-        return "redirect:/administrador/cuentas-empleados";
+        return "redirect:/administrador/cuentas-empleados/" + id + "/sus-encargos";
+    }
+
+    /** RUTA EXTRA: el formulario envía vehiculoId como campo (no puede armar la ruta con {vehiculoId}); hace lo mismo que la anterior. */
+    @PostMapping("/administrador/cuentas-empleados/{id}/encargar")
+    public String encargarDesdeFormulario(@PathVariable Integer id, @RequestParam Integer vehiculoId, RedirectAttributes redirect) {
+        return encargar(id, vehiculoId, redirect);
     }
 
     @PostMapping("/administrador/cuentas-empleados/{id}/desencargar/{vehiculoId}")
     public String desencargar(@PathVariable Integer id, @PathVariable Integer vehiculoId, RedirectAttributes redirect) {
         empleadoService.desencargarVehiculo(id, vehiculoId);
         redirect.addFlashAttribute("mensajeExito", "Vehículo desencargado exitosamente.");
-        return "redirect:/administrador/cuentas-empleados";
+        return "redirect:/administrador/cuentas-empleados/" + id + "/sus-encargos";
     }
 
-//--
     // ------------------------------------------------------------------ DASHBOARDS (TODOS LOS ROLES)
 
     @GetMapping({"/{rol:socio|empleado|administrador|sysadmin}/dash"})
@@ -132,7 +137,6 @@ public class UsuarioController {
     @GetMapping("/socio/mi-perfil")
     public String miPerfilSocio(Model model) {
         model.addAttribute("datosSocio", socioService.obtenerMiPerfil());
-        model.addAttribute("listaPropiedadesGarage", socioService.obtenerMisComprasProperties());
         model.addAttribute("puedeCrear", false);
         model.addAttribute("puedeEditar", false);
         model.addAttribute("puedeEliminar", false);
@@ -370,25 +374,12 @@ public class UsuarioController {
     }
 
 
-    //-------------------------adiccional Endpoints adicionales de bajas e historial para Administradores
+    // ------------------------------------------------------------------ GESTIÓN CUENTAS ADMINISTRADORES (ADMINISTRADOR / SYSADMIN)
 
-    @GetMapping("/sysadmin/cuentas-administradores/bajas")
-    public String listarCuentasAdministradoresBajas(Model model) {
-        model.addAttribute("registros", administradorService.listarAdministradoresInactivos());
-        model.addAttribute("rutaBase", "/sysadmin/cuentas-administradores");
-        model.addAttribute("puedeCrear", false);
-        model.addAttribute("puedeEditar", false);
-        model.addAttribute("puedeEliminar", false);
-        model.addAttribute("modoBajas", true);
-        model.addAttribute("vista", "administrador");
-        return "layout";
-    }
-
-    @GetMapping("/sysadmin/cuentas-administradores/ver/{id}")
-    public String verCuentaAdministrador(@PathVariable Integer id, Model model) {
-        model.addAttribute("registro", administradorService.obtenerAdministradorPorId(id));
+    @GetMapping("/{rol:administrador|sysadmin}/cuentas-administradores")
+    public String listarCuentasAdministradores(@PathVariable String rol, Model model) {
         model.addAttribute("registros", administradorService.listarAdministradores());
-        model.addAttribute("rutaBase", "/sysadmin/cuentas-administradores");
+        model.addAttribute("rutaBase", "/" + rol + "/cuentas-administradores");
         model.addAttribute("puedeCrear", true);
         model.addAttribute("puedeEditar", true);
         model.addAttribute("puedeEliminar", true);
@@ -397,5 +388,50 @@ public class UsuarioController {
         return "layout";
     }
 
+    @GetMapping("/{rol:administrador|sysadmin}/cuentas-administradores/bajas")
+    public String listarCuentasAdministradoresBajas(@PathVariable String rol, Model model) {
+        model.addAttribute("registros", administradorService.listarAdministradoresInactivos());
+        model.addAttribute("rutaBase", "/" + rol + "/cuentas-administradores");
+        model.addAttribute("puedeCrear", false);
+        model.addAttribute("puedeEditar", false);
+        model.addAttribute("puedeEliminar", false);
+        model.addAttribute("modoBajas", true);
+        model.addAttribute("vista", "administrador");
+        return "layout";
+    }
+
+    @GetMapping("/{rol:administrador|sysadmin}/cuentas-administradores/ver/{id}")
+    public String verCuentaAdministrador(@PathVariable String rol, @PathVariable Integer id, Model model) {
+        model.addAttribute("registro", administradorService.obtenerAdministradorPorId(id));
+        model.addAttribute("registros", administradorService.listarAdministradores());
+        model.addAttribute("rutaBase", "/" + rol + "/cuentas-administradores");
+        model.addAttribute("puedeCrear", true);
+        model.addAttribute("puedeEditar", true);
+        model.addAttribute("puedeEliminar", true);
+        model.addAttribute("modoBajas", false);
+        model.addAttribute("vista", "administrador");
+        return "layout";
+    }
+
+    @PostMapping("/{rol:administrador|sysadmin}/cuentas-administradores/crear")
+    public String crearCuentaAdministrador(@PathVariable String rol, @RequestParam Map<String, String> params, RedirectAttributes redirect) {
+        administradorService.crearAdministrador(params);
+        redirect.addFlashAttribute("mensajeExito", "Administrador registrado correctamente.");
+        return "redirect:/" + rol + "/cuentas-administradores";
+    }
+
+    @PostMapping("/{rol:administrador|sysadmin}/cuentas-administradores/editar")
+    public String editarCuentaAdministrador(@PathVariable String rol, @RequestParam Integer id, @RequestParam Map<String, String> params, RedirectAttributes redirect) {
+        administradorService.editarAdministrador(id, params);
+        redirect.addFlashAttribute("mensajeExito", "Datos del administrador actualizados.");
+        return "redirect:/" + rol + "/cuentas-administradores";
+    }
+
+    @PostMapping("/{rol:administrador|sysadmin}/cuentas-administradores/eliminar")
+    public String eliminarCuentaAdministrador(@PathVariable String rol, @RequestParam Integer id, RedirectAttributes redirect) {
+        administradorService.eliminarAdministrador(id);
+        redirect.addFlashAttribute("mensajeExito", "Administrador dado de baja.");
+        return "redirect:/" + rol + "/cuentas-administradores";
+    }
 
 }
