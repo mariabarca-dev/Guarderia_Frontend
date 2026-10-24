@@ -1,5 +1,6 @@
 package com.GuarderiaCentral.Guarderia_Frontend.controllers;
 
+import com.GuarderiaCentral.Guarderia_Frontend.service.AdministradorService;
 import com.GuarderiaCentral.Guarderia_Frontend.service.EmpleadoService;
 import com.GuarderiaCentral.Guarderia_Frontend.service.SocioService;
 import com.GuarderiaCentral.Guarderia_Frontend.service.UsuarioService;
@@ -21,12 +22,101 @@ public class UsuarioController {
     private final UsuarioService usuarioService;
     private final SocioService socioService;
     private final EmpleadoService empleadoService;
+    private final AdministradorService administradorService;
 
-    public UsuarioController(UsuarioService usuarioService, SocioService socioService, EmpleadoService empleadoService) {
+    public UsuarioController(UsuarioService usuarioService, SocioService socioService,
+                             EmpleadoService empleadoService, AdministradorService administradorService) {
         this.usuarioService = usuarioService;
         this.socioService = socioService;
         this.empleadoService = empleadoService;
+        this.administradorService = administradorService;
     }
+
+
+
+
+
+    // ------------------------------------------------------------------ GESTIÓN CUENTAS ADMINISTRADORES (SYSADMIN)
+
+    @GetMapping("/sysadmin/cuentas-administradores")
+    public String listarCuentasAdministradores(Model model) {
+        model.addAttribute("registros", administradorService.listarAdministradores());
+        model.addAttribute("rutaBase", "/sysadmin/cuentas-administradores");
+        model.addAttribute("puedeCrear", true);
+        model.addAttribute("puedeEditar", true);
+        model.addAttribute("puedeEliminar", true);
+        model.addAttribute("modoBajas", false);
+        model.addAttribute("vista", "administrador"); // Vista específica o genérica
+        return "layout";
+    }
+
+    @PostMapping("/sysadmin/cuentas-administradores/crear")
+    public String crearCuentaAdministrador(@RequestParam Map<String, String> params, RedirectAttributes redirect) {
+        administradorService.crearAdministrador(params);
+        redirect.addFlashAttribute("mensajeExito", "Administrador registrado correctamente.");
+        return "redirect:/sysadmin/cuentas-administradores";
+    }
+
+    @PostMapping("/sysadmin/cuentas-administradores/editar")
+    public String editarCuentaAdministrador(@RequestParam Integer id, @RequestParam Map<String, String> params, RedirectAttributes redirect) {
+        administradorService.editarAdministrador(id, params);
+        redirect.addFlashAttribute("mensajeExito", "Datos del administrador actualizados.");
+        return "redirect:/sysadmin/cuentas-administradores";
+    }
+
+    @PostMapping("/sysadmin/cuentas-administradores/eliminar")
+    public String eliminarCuentaAdministrador(@RequestParam Integer id, RedirectAttributes redirect) {
+        administradorService.eliminarAdministrador(id);
+        redirect.addFlashAttribute("mensajeExito", "Administrador dado de baja.");
+        return "redirect:/sysadmin/cuentas-administradores";
+    }
+
+    // ------------------------------------------------------------------ CONSULTAS EXTRA Y ACCIONES DE SOCIOS/EMPLEADOS
+
+    @GetMapping("/administrador/cuentas-socios/{id}/sus-rodados")
+    @ResponseBody
+    public Object susRodados(@PathVariable Integer id) {
+        return socioService.obtenerVehiculosDeSocio(id);
+    }
+
+    @GetMapping("/administrador/cuentas-socios/{id}/sus-cocheras")
+    @ResponseBody
+    public Object susCocheras(@PathVariable Integer id) {
+        return socioService.obtenerGaragesDeSocio(id);
+    }
+
+    @GetMapping("/administrador/cuentas-socios/buscar-documento/{dni}")
+    @ResponseBody
+    public Object buscarDocumento(@PathVariable String dni) {
+        return socioService.buscarSocioPorDni(dni);
+    }
+
+    @GetMapping("/administrador/cuentas-empleados/{id}/sus-sectores")
+    @ResponseBody
+    public Object susSectores(@PathVariable Integer id) {
+        return empleadoService.obtenerSectoresDeEmpleado(id);
+    }
+
+    @GetMapping("/administrador/cuentas-empleados/{id}/sus-encargos")
+    @ResponseBody
+    public Object susEncargos(@PathVariable Integer id) {
+        return empleadoService.obtenerEncargosDeEmpleado(id);
+    }
+
+    @PostMapping("/administrador/cuentas-empleados/{id}/encargar/{vehiculoId}")
+    public String encargar(@PathVariable Integer id, @PathVariable Integer vehiculoId, RedirectAttributes redirect) {
+        empleadoService.encargarVehiculo(id, vehiculoId);
+        redirect.addFlashAttribute("mensajeExito", "Vehículo encargado exitosamente.");
+        return "redirect:/administrador/cuentas-empleados";
+    }
+
+    @PostMapping("/administrador/cuentas-empleados/{id}/desencargar/{vehiculoId}")
+    public String desencargar(@PathVariable Integer id, @PathVariable Integer vehiculoId, RedirectAttributes redirect) {
+        empleadoService.desencargarVehiculo(id, vehiculoId);
+        redirect.addFlashAttribute("mensajeExito", "Vehículo desencargado exitosamente.");
+        return "redirect:/administrador/cuentas-empleados";
+    }
+///*
 
     // ------------------------------------------------------------------ DASHBOARDS (TODOS LOS ROLES)
 
@@ -278,4 +368,34 @@ public class UsuarioController {
         model.addAttribute("vista", "usuario");
         return "layout";
     }
+
+
+    //-------------------------adiccional Endpoints adicionales de bajas e historial para Administradores
+
+    @GetMapping("/sysadmin/cuentas-administradores/bajas")
+    public String listarCuentasAdministradoresBajas(Model model) {
+        model.addAttribute("registros", administradorService.listarAdministradoresInactivos());
+        model.addAttribute("rutaBase", "/sysadmin/cuentas-administradores");
+        model.addAttribute("puedeCrear", false);
+        model.addAttribute("puedeEditar", false);
+        model.addAttribute("puedeEliminar", false);
+        model.addAttribute("modoBajas", true);
+        model.addAttribute("vista", "administrador");
+        return "layout";
+    }
+
+    @GetMapping("/sysadmin/cuentas-administradores/ver/{id}")
+    public String verCuentaAdministrador(@PathVariable Integer id, Model model) {
+        model.addAttribute("registro", administradorService.obtenerAdministradorPorId(id));
+        model.addAttribute("registros", administradorService.listarAdministradores());
+        model.addAttribute("rutaBase", "/sysadmin/cuentas-administradores");
+        model.addAttribute("puedeCrear", true);
+        model.addAttribute("puedeEditar", true);
+        model.addAttribute("puedeEliminar", true);
+        model.addAttribute("modoBajas", false);
+        model.addAttribute("vista", "administrador");
+        return "layout";
+    }
+
+
 }
