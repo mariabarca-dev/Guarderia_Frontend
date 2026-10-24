@@ -8,7 +8,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
+import org.springframework.web.util.UriUtils;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 /**
@@ -115,8 +116,8 @@ public class UsuarioController {
         redirect.addFlashAttribute("mensajeExito", "Vehículo desencargado exitosamente.");
         return "redirect:/administrador/cuentas-empleados";
     }
-///*
 
+//--
     // ------------------------------------------------------------------ DASHBOARDS (TODOS LOS ROLES)
 
     @GetMapping({"/{rol:socio|empleado|administrador|sysadmin}/dash"})

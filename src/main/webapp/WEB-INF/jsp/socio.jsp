@@ -1,250 +1,299 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<%--
+  socio.jsp - Fragmento (se incluye dentro de layout.jsp). Dos usos:
+  1) PERFIL DEL SOCIO (/socio/mi-perfil y /socio/mis-cocheras): llega "datosSocio".
+     En mis-cocheras llega ademas "listaCocherasOcupadas" (GarageOcupadoResponse).
+  2) CUENTAS DE SOCIOS (/administrador|sysadmin/cuentas-socios): llegan "registros", "rutaBase",
+     "puedeCrear", "puedeEditar", "puedeEliminar", "modoBajas" y, en ver, "registro".
+     Consultas extra del ADMINISTRADOR: "resultado" y "tituloResultado".
+--%>
+<c:choose>
 
-<%-- DECLARACIÓN DE BEANS Y VARIABLES DE SESIÓN --%>
-<jsp:useBean id="usuarioSesion" type="java.lang.Object" scope="session" />
-<c:set var="userRole" value="${sessionScope.userRole}" />
-
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <title>Dashboard de Socio</title>
-    <!-- Inclusión centralizada del head (Favicon, Bootstrap y CSS personalizado) -->
-    <jsp:include page="head.jsp" />
-</head>
-<body class="bg-light">
-
-<!-- BARRA DE NAVEGACIÓN SUPERIOR -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4 shadow-sm">
-    <div class="container-fluid">
-        <a class="navbar-brand fw-bold" href="#">Panel General del Socio</a>
-        <div class="d-flex align-items-center">
-            <span class="navbar-text me-3 text-light">
-                Socio: <strong>${usuarioSesion.nombre}</strong>
-                (<span class="badge bg-light text-primary">${userRole}</span>)
-            </span>
-            <!-- Cierre de sesión por formulario tradicional POST con token CSRF -->
-            <form action="${pageContext.request.contextPath}/logout" method="POST" class="m-0">
-                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
-                <button type="submit" class="btn btn-outline-light btn-sm">Cerrar Sesión</button>
-            </form>
+<%-- ================= 1) PERFIL DEL SOCIO LOGUEADO (solo lectura) ================= --%>
+<c:when test="${not empty datosSocio}">
+    <div class="card border-primary shadow-sm mb-4">
+        <div class="card-header bg-primary text-white fw-bold d-flex justify-content-between align-items-center">
+            <span>Mis datos personales</span>
+            <span class="badge bg-light text-dark">DNI: <c:out value="${datosSocio.dni}"/></span>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label text-muted mb-0">Nombre completo</label>
+                    <p class="fw-bold mb-0"><c:out value="${datosSocio.nombre}"/> <c:out value="${datosSocio.apellido}"/></p>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label text-muted mb-0">Usuario</label>
+                    <p class="fw-bold mb-0"><c:out value="${datosSocio.nombreUsuario}"/></p>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label text-muted mb-0">Fecha de ingreso</label>
+                    <p class="fw-bold mb-0"><c:out value="${empty datosSocio.fechaIngreso ? '-' : datosSocio.fechaIngreso}"/></p>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label text-muted mb-0">Dirección</label>
+                    <p class="fw-bold mb-0"><c:out value="${empty datosSocio.direccion ? '-' : datosSocio.direccion}"/></p>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label text-muted mb-0">Teléfono</label>
+                    <p class="fw-bold mb-0"><c:out value="${empty datosSocio.telefono ? '-' : datosSocio.telefono}"/></p>
+                </div>
+            </div>
         </div>
     </div>
-</nav>
 
-<div class="container-fluid px-4">
-
-    <!-- ALERTAS Y MENSAJES DEL SERVIDOR -->
-    <c:if test="${not empty mensajeExito}">
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <strong>¡Éxito!</strong> ${mensajeExito}
-        </div>
-    </c:if>
-    <c:if test="${not empty mensajeError}">
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <strong>Error:</strong> ${mensajeError}
-        </div>
-    </c:if>
-
-    <!-- EVALUACIÓN DE ROLES CON JSTL: VERIFICACIÓN DE ACCESO DE SOCIO Y ADMINISTRATIVO DE NEGOCIO -->
-    <c:choose>
-        <c:when test="${userRole == 'SOCIO' || userRole == 'EMPLEADO' || userRole == 'ADMINISTRADOR'}">
-
-            <!-- 1. SECCIÓN: MIS DATOS PERSONALES -->
-            <div class="row mb-4">
-                <div class="col-12">
-                    <div class="card border-primary shadow-sm">
-                        <div class="card-header bg-primary text-white fw-bold d-flex justify-content-between align-items-center">
-                            <span>1. Mis Datos Personales</span>
-                            <span class="badge bg-light text-dark">DNI: ${datosSocio.dni}</span>
+    <%-- Garages que ocupa el socio (GarageOcupadoResponse). Solo llega en /socio/mis-cocheras. --%>
+    <c:if test="${listaCocherasOcupadas != null}">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-dark text-white fw-bold">Mis cocheras ocupadas</div>
+            <div class="card-body p-0">
+                <c:choose>
+                    <c:when test="${not empty listaCocherasOcupadas}">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped mb-0 align-middle">
+                                <thead class="table-light">
+                                <tr>
+                                    <c:forEach var="col" items="${listaCocherasOcupadas[0]}">
+                                        <th><c:out value="${col.key}"/></th>
+                                    </c:forEach>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <c:forEach var="fila" items="${listaCocherasOcupadas}">
+                                    <tr>
+                                        <c:forEach var="celda" items="${fila}">
+                                            <td><c:out value="${celda.value}"/></td>
+                                        </c:forEach>
+                                    </tr>
+                                </c:forEach>
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="card-body">
+                    </c:when>
+                    <c:otherwise>
+                        <div class="p-4 text-center text-muted">No tenés cocheras ocupadas actualmente.</div>
+                    </c:otherwise>
+                </c:choose>
+            </div>
+        </div>
+    </c:if>
+</c:when>
+
+<%-- ================= 2) CUENTAS DE SOCIOS (ADMINISTRADOR y SYSADMIN) ================= --%>
+<c:otherwise>
+    <c:set var="esAdmin" value="${fn:startsWith(rutaBase, '/administrador')}"/>
+
+    <%-- FORMULARIO CREAR / EDITAR --%>
+    <c:if test="${(puedeCrear or puedeEditar) and not modoBajas}">
+        <details class="card shadow-sm mb-4" <c:if test="${not empty registro}">open</c:if>>
+            <summary class="card-header bg-dark text-white fw-bold">
+                <c:choose>
+                    <c:when test="${not empty registro}">Editar socio</c:when>
+                    <c:otherwise>Registrar nuevo socio</c:otherwise>
+                </c:choose>
+            </summary>
+            <div class="card-body">
+                <c:choose>
+                    <c:when test="${not empty registro}"><c:set var="accionForm" value="${rutaBase}/editar"/></c:when>
+                    <c:otherwise><c:set var="accionForm" value="${rutaBase}/crear"/></c:otherwise>
+                </c:choose>
+                <form action="${pageContext.request.contextPath}<c:out value='${accionForm}'/>" method="POST" class="row g-3" autocomplete="off">
+                    <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
+                    <c:if test="${not empty registro}">
+                        <input type="hidden" name="id" value="<c:out value='${registro.id}'/>"/>
+                    </c:if>
+                    <div class="col-md-4">
+                        <label for="nombre" class="form-label">Nombre</label>
+                        <input type="text" class="form-control" id="nombre" name="nombre" maxlength="100" required
+                               value="<c:out value='${registro.nombre}'/>">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="apellido" class="form-label">Apellido</label>
+                        <input type="text" class="form-control" id="apellido" name="apellido" maxlength="100" required
+                               value="<c:out value='${registro.apellido}'/>">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="dni" class="form-label">DNI</label>
+                        <input type="text" class="form-control" id="dni" name="dni" maxlength="15" required
+                               value="<c:out value='${registro.dni}'/>">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="nombreUsuario" class="form-label">Nombre de usuario</label>
+                        <input type="text" class="form-control" id="nombreUsuario" name="nombreUsuario" maxlength="50" required
+                               value="<c:out value='${registro.nombreUsuario}'/>">
+                    </div>
+                    <c:if test="${empty registro}">
+                        <div class="col-md-4">
+                            <label for="clave" class="form-label">Contraseña</label>
+                            <input type="password" class="form-control" id="clave" name="clave" maxlength="100" required>
+                        </div>
+                    </c:if>
+                    <div class="col-md-4">
+                        <label for="direccion" class="form-label">Dirección</label>
+                        <input type="text" class="form-control" id="direccion" name="direccion" maxlength="150"
+                               value="<c:out value='${registro.direccion}'/>">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="telefono" class="form-label">Teléfono</label>
+                        <input type="text" class="form-control" id="telefono" name="telefono" maxlength="20"
+                               value="<c:out value='${registro.telefono}'/>">
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">
                             <c:choose>
-                                <c:when test="${not empty datosSocio}">
-                                    <div class="row g-3">
-                                        <div class="col-md-4">
-                                            <label class="form-label text-muted mb-0">Nombre Completo</label>
-                                            <p class="fw-bold mb-0">${datosSocio.nombre} ${datosSocio.apellido}</p>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label text-muted mb-0">Nombre de Usuario</label>
-                                            <p class="fw-bold mb-0">${datosSocio.nombreUsuario}</p>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label text-muted mb-0">DNI</label>
-                                            <p class="fw-bold mb-0">${datosSocio.dni}</p>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label text-muted mb-0">Dirección</label>
-                                            <p class="fw-bold mb-0">${datosSocio.direccion}</p>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label text-muted mb-0">Teléfono</label>
-                                            <p class="fw-bold mb-0">${datosSocio.telefono}</p>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label text-muted mb-0">Fecha de Ingreso</label>
-                                            <p class="fw-bold mb-0">${datosSocio.fechaIngreso}</p>
-                                        </div>
-                                    </div>
-                                </c:when>
-                                <c:otherwise>
-                                    <p class="text-danger mb-0">Error: No se pudieron cargar los datos personales del socio.</p>
-                                </c:otherwise>
+                                <c:when test="${not empty registro}">Guardar cambios</c:when>
+                                <c:otherwise>Registrar</c:otherwise>
                             </c:choose>
-                        </div>
-
-                        <!-- ACCIONES ADMINISTRATIVAS EXCLUSIVAS PARA ADMINISTRADOR (ENTIDAD DE NEGOCIO) -->
-                        <c:if test="${userRole == 'ADMINISTRADOR'}">
-                            <div class="card-footer bg-light text-end">
-                                <form action="${pageContext.request.contextPath}/admin/socios/editar" method="GET" class="d-inline">
-                                    <input type="hidden" name="id" value="${datosSocio.id}">
-                                    <button type="submit" class="btn btn-warning btn-sm">Editar Datos de Socio</button>
-                                </form>
-                            </div>
+                        </button>
+                        <c:if test="${not empty registro}">
+                            <a href="${pageContext.request.contextPath}<c:out value='${rutaBase}'/>" class="btn btn-secondary">Cancelar</a>
                         </c:if>
                     </div>
-                </div>
+                </form>
             </div>
+        </details>
+    </c:if>
 
-            <!-- 2. SECCIÓN: TABLAS DE INFORMACIÓN RELACIONADA -->
-            <div class="row">
-
-                <!-- TABLA: VEHÍCULOS (RELACIÓN 1->N CON SOCIO) -->
-                <div class="col-lg-6 mb-4">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-header bg-dark text-white fw-bold d-flex justify-content-between align-items-center">
-                            <span>2. Vehículos Registrados</span>
-                            <c:if test="${userRole == 'ADMINISTRADOR'}">
-                                <form action="${pageContext.request.contextPath}/admin/vehiculos/nuevo" method="GET" class="m-0">
-                                    <input type="hidden" name="socioId" value="${datosSocio.id}">
-                                    <button type="submit" class="btn btn-success btn-sm">+ Registrar Vehículo</button>
-                                </form>
-                            </c:if>
-                        </div>
-                        <div class="card-body p-0">
-                            <c:choose>
-                                <c:when test="${not empty listaVehiculos}">
-                                    <div class="table-responsive">
-                                        <table class="table table-hover table-striped mb-0 align-middle">
-                                            <thead class="table-light">
-                                            <tr>
-                                                <th>ID</th>
-                                                <th>Matrícula</th>
-                                                <th>Tipo</th>
-                                                <c:if test="${userRole == 'ADMINISTRADOR'}">
-                                                    <th class="text-end">Acciones</th>
-                                                </c:if>
-                                            </tr>
-                                            </thead>
-                                            <tbody>
-                                            <c:forEach var="v" items="${listaVehiculos}">
-                                                <tr>
-                                                    <td>${v.id}</td>
-                                                    <td><span class="badge bg-secondary">${v.matricula}</span></td>
-                                                    <td>${v.tipo}</td>
-                                                    <c:if test="${userRole == 'ADMINISTRADOR'}">
-                                                        <td class="text-end">
-                                                            <form action="${pageContext.request.contextPath}/admin/vehiculos/editar" method="GET" class="d-inline">
-                                                                <input type="hidden" name="id" value="${v.id}">
-                                                                <button type="submit" class="btn btn-warning btn-sm">Editar</button>
-                                                            </form>
-                                                            <form action="${pageContext.request.contextPath}/admin/vehiculos/eliminar" method="POST" class="d-inline">
-                                                                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
-                                                                <input type="hidden" name="id" value="${v.id}">
-                                                                <button type="submit" class="btn btn-danger btn-sm">Borrar</button>
-                                                            </form>
-                                                        </td>
-                                                    </c:if>
-                                                </tr>
-                                            </c:forEach>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </c:when>
-                                <c:otherwise>
-                                    <div class="p-4 text-center text-muted">
-                                        <p class="mb-0">No se encuentran vehículos registrados.</p>
-                                    </div>
-                                </c:otherwise>
-                            </c:choose>
-                        </div>
+    <%-- BUSCAR POR DNI (consulta extra, solo ADMINISTRADOR) --%>
+    <c:if test="${esAdmin and not modoBajas}">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <form action="${pageContext.request.contextPath}<c:out value='${rutaBase}'/>/buscar-documento" method="GET" class="row g-2 align-items-end">
+                    <div class="col-md-4">
+                        <label for="buscarDni" class="form-label">Buscar socio por DNI</label>
+                        <input type="text" class="form-control" id="buscarDni" name="dni" maxlength="15" required>
                     </div>
-                </div>
-
-                <!-- TABLA: GARAJES COMPRADOS / PROPIEDAD (PROPIEDADGARAGEDTO) -->
-                <div class="col-lg-6 mb-4">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-header bg-dark text-white fw-bold d-flex justify-content-between align-items-center">
-                            <span>3. Garajes en Propiedad</span>
-                            <c:if test="${userRole == 'ADMINISTRADOR'}">
-                                <form action="${pageContext.request.contextPath}/admin/propiedad-garage/nuevo" method="GET" class="m-0">
-                                    <input type="hidden" name="socioId" value="${datosSocio.id}">
-                                    <button type="submit" class="btn btn-info btn-sm text-white">+ Asignar Garaje Libre</button>
-                                </form>
-                            </c:if>
-                        </div>
-                        <div class="card-body p-0">
-                            <c:choose>
-                                <c:when test="${not empty listaPropiedadesGarage}">
-                                    <div class="table-responsive">
-                                        <table class="table table-hover table-striped mb-0 align-middle">
-                                            <thead class="table-light">
-                                            <tr>
-                                                <th>ID Garaje</th>
-                                                <th>Zona</th>
-                                                <th>Fecha Compra</th>
-                                                <c:if test="${userRole == 'ADMINISTRADOR'}">
-                                                    <th class="text-end">Acciones</th>
-                                                </c:if>
-                                            </tr>
-                                            </thead>
-                                            <tbody>
-                                            <!-- Itera la lista de PropiedadGarageDTO (no GarageDTO directamente) -->
-                                            <c:forEach var="pg" items="${listaPropiedadesGarage}">
-                                                <tr>
-                                                    <td>${pg.garageId}</td>
-                                                    <td><span class="badge bg-info text-dark">Zona ${pg.zonaNombre}</span></td>
-                                                    <td>${pg.fechaCompra}</td>
-                                                    <c:if test="${userRole == 'ADMINISTRADOR'}">
-                                                        <td class="text-end">
-                                                            <form action="${pageContext.request.contextPath}/admin/propiedad-garage/desvincular" method="POST" class="d-inline">
-                                                                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
-                                                                <input type="hidden" name="id" value="${pg.id}">
-                                                                <button type="submit" class="btn btn-danger btn-sm">Quitar</button>
-                                                            </form>
-                                                        </td>
-                                                    </c:if>
-                                                </tr>
-                                            </c:forEach>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </c:when>
-                                <c:otherwise>
-                                    <div class="p-4 text-center text-muted">
-                                        <p class="mb-0">No posee garajes registrados actualmente.</p>
-                                    </div>
-                                </c:otherwise>
-                            </c:choose>
-                        </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-secondary">Buscar</button>
                     </div>
-                </div>
-
+                </form>
             </div>
+        </div>
+    </c:if>
 
-        </c:when>
-
-        <%-- DENEGACIÓN DE ACCESO PARA ROLES NO PERMITIDOS (POR EJEMPLO SYSADMIN TRATANDO DE ACCEDER A VISTA DE NEGOCIO) --%>
-        <c:otherwise>
-            <div class="alert alert-danger shadow-sm">
-                <h4 class="alert-heading">Acceso Restringido</h4>
-                <p class="mb-0">Su rol actual (<strong>${userRole}</strong>) no está autorizado para visualizar o gestionar este panel de entidades de negocio.</p>
+    <%-- RESULTADO DE UNA CONSULTA EXTRA (rodados o cocheras de un socio) --%>
+    <c:if test="${resultado != null}">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-secondary text-white fw-bold d-flex justify-content-between align-items-center">
+                <span><c:out value="${tituloResultado}"/></span>
+                <a href="${pageContext.request.contextPath}<c:out value='${rutaBase}'/>" class="btn btn-light btn-sm">Cerrar</a>
             </div>
-        </c:otherwise>
-    </c:choose>
+            <div class="card-body p-0">
+                <c:choose>
+                    <c:when test="${not empty resultado}">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped mb-0 align-middle">
+                                <thead class="table-light">
+                                <tr>
+                                    <c:forEach var="col" items="${resultado[0]}">
+                                        <th><c:out value="${col.key}"/></th>
+                                    </c:forEach>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <c:forEach var="fila" items="${resultado}">
+                                    <tr>
+                                        <c:forEach var="celda" items="${fila}">
+                                            <td><c:out value="${celda.value}"/></td>
+                                        </c:forEach>
+                                    </tr>
+                                </c:forEach>
+                                </tbody>
+                            </table>
+                        </div>
+                    </c:when>
+                    <c:otherwise>
+                        <div class="p-4 text-center text-muted">No hay registros para mostrar.</div>
+                    </c:otherwise>
+                </c:choose>
+            </div>
+        </div>
+    </c:if>
 
-</div>
-
-</body>
-</html>
+    <%-- LISTADO DE SOCIOS --%>
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-dark text-white fw-bold d-flex justify-content-between align-items-center">
+            <span>
+                Socios
+                <c:if test="${modoBajas}"> (dados de baja)</c:if>
+            </span>
+            <c:choose>
+                <c:when test="${modoBajas}">
+                    <a href="${pageContext.request.contextPath}<c:out value='${rutaBase}'/>" class="btn btn-light btn-sm">Ver activos</a>
+                </c:when>
+                <c:otherwise>
+                    <a href="${pageContext.request.contextPath}<c:out value='${rutaBase}'/>/bajas" class="btn btn-light btn-sm">Ver bajas</a>
+                </c:otherwise>
+            </c:choose>
+        </div>
+        <div class="card-body p-0">
+            <c:choose>
+                <c:when test="${not empty registros}">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped mb-0 align-middle">
+                            <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre y apellido</th>
+                                <th>DNI</th>
+                                <th>Usuario</th>
+                                <th>Teléfono</th>
+                                <th>Ingreso</th>
+                                <c:if test="${modoBajas}"><th>Estado</th></c:if>
+                                <c:if test="${not modoBajas}"><th class="text-end">Acciones</th></c:if>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <c:forEach var="s" items="${registros}">
+                                <tr>
+                                    <td><c:out value="${s.id}"/></td>
+                                    <td><strong><c:out value="${s.nombre}"/> <c:out value="${s.apellido}"/></strong></td>
+                                    <td><c:out value="${s.dni}"/></td>
+                                    <td><span class="badge bg-secondary"><c:out value="${s.nombreUsuario}"/></span></td>
+                                    <td><c:out value="${empty s.telefono ? '-' : s.telefono}"/></td>
+                                    <td><c:out value="${empty s.fechaIngreso ? '-' : s.fechaIngreso}"/></td>
+                                    <c:if test="${modoBajas}">
+                                        <td>
+                                            <c:choose>
+                                                <c:when test="${s.activo == false}"><span class="badge bg-danger">Baja</span></c:when>
+                                                <c:otherwise><span class="badge bg-success">Activo</span></c:otherwise>
+                                            </c:choose>
+                                        </td>
+                                    </c:if>
+                                    <c:if test="${not modoBajas}">
+                                        <td class="text-end">
+                                            <c:if test="${esAdmin}">
+                                                <a href="${pageContext.request.contextPath}/administrador/cuentas-socios/<c:out value='${s.id}'/>/sus-rodados"
+                                                   class="btn btn-outline-secondary btn-sm">Rodados</a>
+                                                <a href="${pageContext.request.contextPath}/administrador/cuentas-socios/<c:out value='${s.id}'/>/sus-cocheras"
+                                                   class="btn btn-outline-secondary btn-sm">Cocheras</a>
+                                            </c:if>
+                                            <c:if test="${puedeEditar}">
+                                                <a href="${pageContext.request.contextPath}<c:out value='${rutaBase}'/>/ver/<c:out value='${s.id}'/>"
+                                                   class="btn btn-warning btn-sm">Editar</a>
+                                            </c:if>
+                                            <c:if test="${puedeEliminar}">
+                                                <form action="${pageContext.request.contextPath}<c:out value='${rutaBase}'/>/eliminar" method="POST" class="d-inline">
+                                                    <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
+                                                    <input type="hidden" name="id" value="<c:out value='${s.id}'/>"/>
+                                                    <button type="submit" class="btn btn-danger btn-sm">Dar de baja</button>
+                                                </form>
+                                            </c:if>
+                                        </td>
+                                    </c:if>
+                                </tr>
+                            </c:forEach>
+                            </tbody>
+                        </table>
+                    </div>
+                </c:when>
+                <c:otherwise>
+                    <div class="p-4 text-center text-muted">No hay socios para mostrar.</div>
+                </c:otherwise>
+            </c:choose>
+        </div>
+    </div>
+</c:otherwise>
+</c:choose>
