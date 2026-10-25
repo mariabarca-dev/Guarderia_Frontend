@@ -110,7 +110,16 @@
                             <tr>
                                 <td><c:out value="${a.id}"/></td>
                                 <td><strong><c:out value="${a.nombre}"/> <c:out value="${a.apellido}"/></strong></td>
-                                <td><span class="badge bg-secondary"><c:out value="${a.nombreUsuario}"/></span></td>
+                                <td>
+                                    <c:choose>
+                                        <c:when test="${a.rol eq 'SYSADMIN' or a.nombreUsuario eq 'sysadmin'}">
+                                            <span class="badge rol-SYSADMIN"><c:out value="${a.nombreUsuario}"/></span>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <span class="badge rol-ADMINISTRADOR"><c:out value="${a.nombreUsuario}"/></span>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </td>
                                 <td><c:out value="${empty a.telefono ? '-' : a.telefono}"/></td>
                                 <td><c:out value="${empty a.direccion ? '-' : a.direccion}"/></td>
                                 <c:if test="${modoBajas}">

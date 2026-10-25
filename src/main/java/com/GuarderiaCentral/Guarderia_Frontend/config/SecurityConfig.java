@@ -72,7 +72,7 @@ public class SecurityConfig {
                         // Los forward/include internos hacia las JSP y el despacho de errores no son rutas del usuario
                         .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.INCLUDE, DispatcherType.ERROR).permitAll()
                         .requestMatchers("/", "/login", "/acceso-denegado", "/error",
-                                "/images/**", "/caravana.ico").permitAll()
+                                "/images/**", "/css/**", "/caravana.ico").permitAll()
                         .requestMatchers("/socio/**").hasRole("SOCIO")
                         .requestMatchers("/empleado/**").hasRole("EMPLEADO")
                         .requestMatchers("/administrador/**").hasRole("ADMINISTRADOR")

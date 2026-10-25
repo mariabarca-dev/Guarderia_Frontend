@@ -14,7 +14,7 @@
 <header class="navbar navbar-dark bg-dark">
     <div class="container-fluid">
         <span class="navbar-brand">
-            <img src="${pageContext.request.contextPath}/images/logo.jpg" alt="Logo" width="30" height="30"
+            <img src="${pageContext.request.contextPath}/images/escudo.png" alt="Logo" width="40" height="40"
                  class="d-inline-block align-text-top me-2">
             Guardería Central
         </span>

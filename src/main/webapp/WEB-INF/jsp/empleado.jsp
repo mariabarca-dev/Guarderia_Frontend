@@ -74,7 +74,7 @@
                     <c:if test="${not empty registro}">
                         <input type="hidden" name="id" value="<c:out value='${registro.id}'/>"/>
                     </c:if>
-                      <div class="col-md-4"> /// ESTO CAMBIE "codigo"
+                      <div class="col-md-4">
                                           <label for="codigo" class="form-label">Código de empleado</label>
                                           <input type="text" class="form-control" id="codigo" name="codigo" maxlength="30" required
                                                  value="<c:out value='${not empty registro.codigoEmpleado ? registro.codigoEmpleado : registro.codigo}'/>">
@@ -243,7 +243,7 @@
                                     <td><c:out value="${not empty e.codigoEmpleado ? e.codigoEmpleado : e.codigo}"/></td>
                                     <td><strong><c:out value="${e.nombre}"/> <c:out value="${e.apellido}"/></strong></td>
                                     <td><span class="badge bg-primary"><c:out value="${e.especialidad}"/></span></td>
-                                    <td><span class="badge bg-secondary"><c:out value="${e.nombreUsuario}"/></span></td>
+                                    <td><span class="badge rol-EMPLEADO"><c:out value="${e.nombreUsuario}"/></span></td>
                                     <td><c:out value="${empty e.telefono ? '-' : e.telefono}"/></td>
                                     <c:if test="${modoBajas}">
                                         <td>

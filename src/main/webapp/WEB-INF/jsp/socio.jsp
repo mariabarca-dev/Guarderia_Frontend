@@ -258,7 +258,7 @@
                                     <td><c:out value="${s.id}"/></td>
                                     <td><strong><c:out value="${s.nombre}"/> <c:out value="${s.apellido}"/></strong></td>
                                     <td><c:out value="${s.dni}"/></td>
-                                    <td><span class="badge bg-secondary"><c:out value="${s.nombreUsuario}"/></span></td>
+                                    <td><span class="badge rol-SOCIO"><c:out value="${s.nombreUsuario}"/></span></td>
                                     <td><c:out value="${empty s.telefono ? '-' : s.telefono}"/></td>
                                     <td><c:out value="${empty s.fechaIngreso ? '-' : s.fechaIngreso}"/></td>
                                     <c:if test="${modoBajas}">

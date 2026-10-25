@@ -29,7 +29,7 @@
                 </div>
                 <div class="col-md-4">
                     <label class="form-label text-muted mb-0">Rol</label>
-                    <p class="mb-0"><span class="badge bg-secondary"><c:out value="${registro.rol}"/></span></p>
+                    <p class="mb-0"><span class="badge rol-${registro.rol}"><c:out value="${registro.rol}"/></span></p>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label text-muted mb-0">DNI</label>
@@ -97,7 +97,7 @@
                                     <td><strong><c:out value="${u.nombre}"/> <c:out value="${u.apellido}"/></strong></td>
                                     <td><c:out value="${u.nombreUsuario}"/></td>
                                     <td><c:out value="${empty u.dni ? '-' : u.dni}"/></td>
-                                    <td><span class="badge bg-secondary"><c:out value="${u.rol}"/></span></td>
+                                    <td><span class="badge rol-${u.rol}"><c:out value="${u.rol}"/></span></td>
                                     <td>
                                         <c:choose>
                                             <c:when test="${u.activo == false}"><span class="badge bg-danger">Baja</span></c:when>

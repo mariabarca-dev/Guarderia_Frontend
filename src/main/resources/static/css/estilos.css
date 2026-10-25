@@ -1,0 +1,227 @@
+/* Guardería Central - paleta tomada del logo.
+   Fondo azul oscuro, texto blanco, campos de texto blancos con letra negra.
+   Solo CSS: no usa JavaScript. Se carga desde head.jsp después de Bootstrap. */
+
+:root {
+    --gc-fondo: #0b1033;
+    --gc-fondo-suave: #151b57;
+    --gc-barra: #070a24;
+    --gc-azul: #3a35c8;
+    --gc-dorado: #ffd21f;
+
+    --bs-body-bg: #0b1033;
+    --bs-body-bg-rgb: 11, 16, 51;
+    --bs-body-color: #ffffff;
+    --bs-body-color-rgb: 255, 255, 255;
+    --bs-secondary-color: rgba(255, 255, 255, 0.75);
+    --bs-border-color: rgba(255, 255, 255, 0.25);
+    --bs-primary: #3a35c8;
+    --bs-primary-rgb: 58, 53, 200;
+    --bs-dark-rgb: 7, 10, 36;
+    /* Las clases bg-light y bg-secondary que ya usan las pantallas pasan a tonos del logo */
+    --bs-light-rgb: 11, 16, 51;
+    --bs-secondary-rgb: 32, 38, 110;
+    --bs-link-color: #ffd21f;
+    --bs-link-hover-color: #ffe466;
+    --bs-link-color-rgb: 255, 210, 31;
+    --bs-link-hover-color-rgb: 255, 228, 102;
+}
+
+body {
+    background-color: var(--gc-fondo);
+    color: #ffffff;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: #ffffff;
+}
+
+.text-muted,
+.form-text {
+    color: rgba(255, 255, 255, 0.75) !important;
+}
+
+hr {
+    border-color: rgba(255, 255, 255, 0.4);
+    opacity: 1;
+}
+
+/* Barra superior y menú */
+.navbar {
+    border-bottom: 2px solid var(--gc-dorado);
+}
+
+.nav-link:hover {
+    color: var(--gc-dorado) !important;
+}
+
+/* Pie de página */
+footer {
+    border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+/* Tarjetas */
+.card {
+    --bs-card-bg: var(--gc-fondo-suave);
+    --bs-card-color: #ffffff;
+    --bs-card-border-color: rgba(255, 255, 255, 0.2);
+    --bs-card-cap-bg: rgba(255, 255, 255, 0.08);
+    --bs-card-cap-color: #ffffff;
+}
+
+/* Tarjeta del login: recuadro blanco con letra oscura */
+.card.card-login {
+    --bs-card-bg: #ffffff;
+    --bs-card-color: #212529;
+    --bs-card-border-color: #dee2e6;
+}
+
+.card-login .form-label {
+    color: #212529;
+}
+
+/* Tablas */
+.table {
+    --bs-table-color: #ffffff;
+    --bs-table-bg: transparent;
+    --bs-table-border-color: rgba(255, 255, 255, 0.25);
+    --bs-table-striped-color: #ffffff;
+    --bs-table-striped-bg: rgba(255, 255, 255, 0.07);
+    --bs-table-hover-color: #ffffff;
+    --bs-table-hover-bg: rgba(255, 255, 255, 0.14);
+}
+
+.table > thead.table-light > tr > *,
+.table > thead > tr.table-light > *,
+.table-light {
+    --bs-table-color: #ffd21f;
+    --bs-table-bg: #1b2170;
+    --bs-table-border-color: rgba(255, 255, 255, 0.25);
+}
+
+/* Formularios: cuadro blanco, letra negra */
+.form-label {
+    color: #ffffff;
+}
+
+.form-control,
+.form-select {
+    background-color: #ffffff;
+    color: #000000;
+    border: 1px solid #ced4da;
+}
+
+.form-control::placeholder {
+    color: #6c757d;
+}
+
+.form-control:focus,
+.form-select:focus {
+    background-color: #ffffff;
+    color: #000000;
+    border-color: var(--gc-dorado);
+    box-shadow: 0 0 0 0.25rem rgba(255, 210, 31, 0.35);
+}
+
+.form-control:disabled,
+.form-control[readonly],
+.form-select:disabled {
+    background-color: #e9ecef;
+    color: #000000;
+}
+
+/* Botones */
+.btn-primary {
+    --bs-btn-bg: #3a35c8;
+    --bs-btn-border-color: #3a35c8;
+    --bs-btn-color: #ffffff;
+    --bs-btn-hover-bg: #2d29a3;
+    --bs-btn-hover-border-color: #2d29a3;
+    --bs-btn-hover-color: #ffffff;
+    --bs-btn-active-bg: #2d29a3;
+    --bs-btn-active-border-color: #2d29a3;
+}
+
+.btn-secondary {
+    --bs-btn-bg: #5a6080;
+    --bs-btn-border-color: #5a6080;
+    --bs-btn-hover-bg: #474c68;
+    --bs-btn-hover-border-color: #474c68;
+}
+
+/* Etiquetas claras: fondo blanco real para que se lea el texto oscuro */
+.badge.bg-light {
+    background-color: #ffffff !important;
+}
+
+/* Avisos legibles sobre fondo oscuro */
+.alert-success {
+    --bs-alert-bg: #d1f2e0;
+    --bs-alert-color: #0b3d24;
+    --bs-alert-border-color: #a3e4c1;
+}
+
+.alert-danger {
+    --bs-alert-bg: #fde0e0;
+    --bs-alert-color: #6b0f0f;
+    --bs-alert-border-color: #f5b5b5;
+}
+
+.alert-warning {
+    --bs-alert-bg: #fff3cd;
+    --bs-alert-color: #664d03;
+    --bs-alert-border-color: #ffe69c;
+}
+
+/* Secciones plegables sin JavaScript */
+details summary {
+    color: var(--gc-dorado);
+    cursor: pointer;
+}
+
+/* Etiquetas de usuario más visibles */
+.badge.bg-dark,
+.badge.bg-secondary {
+    background-color: #3a35c8 !important;
+    color: #ffffff;
+}
+
+/* Botón "Ver bajas" discreto */
+.btn-light {
+    --bs-btn-bg: transparent;
+    --bs-btn-color: #ffd21f;
+    --bs-btn-border-color: #ffd21f;
+    --bs-btn-hover-bg: #ffd21f;
+    --bs-btn-hover-color: #000000;
+    --bs-btn-hover-border-color: #ffd21f;
+    --bs-btn-active-bg: #ffd21f;
+    --bs-btn-active-color: #000000;
+}
+
+/* Recuadro del login */
+.card.card-login {
+    --bs-card-bg: rgba(255, 255, 255, 0.97);
+    border: 0;
+    border-top: 4px solid #ffd21f;
+    border-radius: 12px;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.45) !important;
+}
+
+.card-login .card-body {
+    padding: 1.75rem;
+}
+
+.card-login .form-label {
+    font-weight: 600;
+}
+
+.card-login .btn-primary {
+    font-weight: 600;
+    padding: 0.6rem 1rem;
+}
+
+/* Etiquetas de rol: gamas de azul */
+.badge.rol-SYSADMIN      { background-color: #dbe9ff; color: #0b1033; }
+.badge.rol-ADMINISTRADOR { background-color: #4da3ff; color: #0b1033; }
+.badge.rol-SOCIO         { background-color: #7c6cff; color: #ffffff; }
+.badge.rol-EMPLEADO      { background-color: #2f6fed; color: #ffffff; }
