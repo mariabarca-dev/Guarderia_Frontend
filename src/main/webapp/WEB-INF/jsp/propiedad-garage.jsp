@@ -1,167 +1,161 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page contentType="text/html;charset=UTF-8" pageEncoding="UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<%--
+  COMPRAS DE COCHERAS (propiedades de garage).
+  Fragmento incluido por layout.jsp (sin html/head/body). Toda salida con c:out o fn:escapeXml. Sin JavaScript.
+  Lo usan: PropiedadGarageController (ADMINISTRADOR) y UsuarioController (SOCIO /socio/mis-compras: solo lectura).
 
-<%-- Vista compartida: ADMINISTRADOR (gestion-compras) y SOCIO (mis-compras, solo lectura).
-     Campos del back (PropiedadGarageResponse): id, socioId, garageId, fechaCompraGarage, activo.
-     OJO: GET /propiedades-garage/socio/{id} devuelve GarageResponse (id, numeroGarage, zonaId, ...),
-     por eso la columna Garage tambien contempla numeroGarage. --%>
+  Model que arma el controller:
+    titulo, base (ruta web de la tabla), lista (List<Map>), registro (Map a ver/editar, puede ser null),
+    esBajas (muestra Estado y oculta acciones), puedeVer, puedeCrear, puedeEditar, puedeEliminar,
+    puedeConsultar (muestra la tarjeta de consultas; solo ADMINISTRADOR).
+    garagesDelSocio y socioConsultado (opcionales): List<GarageResponse> de GET /propiedades-garage/socio/{id}.
+--%>
+<c:set var="raiz" value="${pageContext.request.contextPath}${base}"/>
+<c:set var="editando" value="${not empty registro and puedeEditar}"/>
 
-<%-- FORMULARIO CREAR / EDITAR --%>
-<c:if test="${(puedeCrear or puedeEditar) and not modoBajas}">
-    <details class="card shadow-sm mb-4" <c:if test="${not empty registro}">open</c:if>>
-        <summary class="card-header bg-dark text-white fw-bold">
-            <c:choose>
-                <c:when test="${not empty registro}">Editar compra de garage</c:when>
-                <c:otherwise>Registrar compra de garage</c:otherwise>
-            </c:choose>
-        </summary>
+<c:if test="${puedeConsultar}">
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light fw-bold">Consultas</div>
         <div class="card-body">
-            <c:choose>
-                <c:when test="${not empty registro}"><c:set var="accionForm" value="${rutaBase}/editar"/></c:when>
-                <c:otherwise><c:set var="accionForm" value="${rutaBase}/crear"/></c:otherwise>
-            </c:choose>
-            <form action="${pageContext.request.contextPath}${accionForm}" method="POST" class="row g-3" autocomplete="off">
-                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
-                <c:if test="${not empty registro}">
-                    <input type="hidden" name="id" value="<c:out value='${registro.id}'/>"/>
-                </c:if>
-
-                <div class="col-md-4">
-                    <label for="socioId" class="form-label">ID del socio</label>
-                    <input type="number" min="1" class="form-control" id="socioId" name="socioId" required
-                           value="<c:out value='${registro.socioId}'/>">
+            <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-outline-dark btn-sm" href="${fn:escapeXml(raiz)}">Listado</a>
+            <a class="btn btn-outline-dark btn-sm" href="${fn:escapeXml(raiz)}/bajas">Activas y dadas de baja</a>
+            </div>
+            <form action="${fn:escapeXml(raiz)}/de-socio" method="get" class="row g-2 align-items-end mt-2">
+                <div class="col-sm-6 col-md-4">
+                    <label class="form-label">Cocheras compradas por un socio (ID del socio)</label>
+                    <input type="number" class="form-control" name="nroSocio" required min="1">
                 </div>
-                <div class="col-md-4">
-                    <label for="garageId" class="form-label">ID del garage</label>
-                    <input type="number" min="1" class="form-control" id="garageId" name="garageId" required
-                           value="<c:out value='${registro.garageId}'/>">
-                </div>
-                <div class="col-md-4">
-                    <label for="fechaCompraGarage" class="form-label">Fecha de compra</label>
-                    <input type="date" class="form-control" id="fechaCompraGarage" name="fechaCompraGarage" required
-                           value="<c:out value='${registro.fechaCompraGarage}'/>">
-                </div>
-                <div class="col-12">
-                    <button type="submit" class="btn btn-primary">
-                        <c:choose>
-                            <c:when test="${not empty registro}">Guardar cambios</c:when>
-                            <c:otherwise>Registrar</c:otherwise>
-                        </c:choose>
-                    </button>
-                    <c:if test="${not empty registro}">
-                        <a href="${pageContext.request.contextPath}${rutaBase}" class="btn btn-secondary">Cancelar</a>
-                    </c:if>
-                </div>
+                <div class="col-auto"><button type="submit" class="btn btn-primary">Buscar</button></div>
             </form>
         </div>
-    </details>
+    </div>
 </c:if>
 
-<%-- LISTADO --%>
-<div class="card shadow-sm mb-4">
-    <div class="card-header bg-dark text-white fw-bold d-flex justify-content-between align-items-center">
-        <span>
-            <c:out value="${empty titulo ? 'Compras de garages' : titulo}"/>
-            <c:if test="${modoBajas}"> (dadas de baja)</c:if>
-        </span>
-        <c:if test="${not empty rutaBase}">
+<c:if test="${not empty socioConsultado}">
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-secondary text-white fw-bold">
+            Cocheras compradas por el socio <c:out value="${socioConsultado}"/>
+        </div>
+        <div class="card-body p-0">
             <c:choose>
-                <c:when test="${modoBajas}">
-                    <a href="${pageContext.request.contextPath}${rutaBase}" class="btn btn-light btn-sm">Ver activas</a>
-                </c:when>
-                <c:otherwise>
-                    <a href="${pageContext.request.contextPath}${rutaBase}/bajas" class="btn btn-light btn-sm">Ver bajas</a>
-                </c:otherwise>
-            </c:choose>
-        </c:if>
-    </div>
-    <div class="card-body p-0">
-        <c:choose>
-            <c:when test="${not empty registros}">
-                <div class="table-responsive">
-                    <table class="table table-hover table-striped mb-0 align-middle">
+                <c:when test="${not empty garagesDelSocio}">
+                    <table class="table table-striped mb-0 align-middle">
                         <thead class="table-light">
-                        <tr>
-                            <th>ID</th>
-                            <th>Socio</th>
-                            <th>Garage</th>
-                            <th>Fecha de compra</th>
-                            <c:if test="${modoBajas}"><th>Estado</th></c:if>
-                            <c:if test="${not modoBajas and (puedeEditar or puedeEliminar)}"><th class="text-end">Acciones</th></c:if>
-                        </tr>
+                        <tr><th>ID</th><th>N° de cochera</th><th>Lectura de luz</th><th>Mantenimiento</th><th>Zona (ID)</th></tr>
                         </thead>
                         <tbody>
-                        <c:forEach var="p" items="${registros}">
+                        <c:forEach var="g" items="${garagesDelSocio}">
                             <tr>
-                                <td><c:out value="${p.id}"/></td>
-                                <td>
-                                    <c:choose>
-                                        <c:when test="${not empty p.socioId}">Socio #<c:out value="${p.socioId}"/></c:when>
-                                        <c:otherwise><em class="text-muted">-</em></c:otherwise>
-                                    </c:choose>
-                                </td>
-                                <td>
-                                    <span class="badge bg-dark">
-                                        <c:choose>
-                                            <c:when test="${not empty p.garageId}">Garage #<c:out value="${p.garageId}"/></c:when>
-                                            <c:otherwise>Garage N° <c:out value="${p.numeroGarage}"/></c:otherwise>
-                                        </c:choose>
-                                    </span>
-                                </td>
-                                <td>
-                                    <c:choose>
-                                        <c:when test="${not empty p.fechaCompraGarage}"><c:out value="${p.fechaCompraGarage}"/></c:when>
-                                        <c:otherwise><em class="text-muted">Sin fecha</em></c:otherwise>
-                                    </c:choose>
-                                </td>
-                                <c:if test="${modoBajas}">
-                                    <td>
-                                        <c:choose>
-                                            <c:when test="${p.activo == false}"><span class="badge bg-danger">Baja</span></c:when>
-                                            <c:otherwise><span class="badge bg-success">Activo</span></c:otherwise>
-                                        </c:choose>
-                                    </td>
-                                </c:if>
-                                <c:if test="${not modoBajas and (puedeEditar or puedeEliminar)}">
-                                    <td class="text-end">
-                                        <c:if test="${puedeEditar}">
-                                            <a href="${pageContext.request.contextPath}${rutaBase}/ver/${p.id}" class="btn btn-warning btn-sm">Editar</a>
-                                        </c:if>
-                                        <c:if test="${puedeEliminar}">
-                                            <form action="${pageContext.request.contextPath}${rutaBase}/eliminar" method="POST" class="d-inline">
-                                                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
-                                                <input type="hidden" name="id" value="<c:out value='${p.id}'/>"/>
-                                                <button type="submit" class="btn btn-danger btn-sm">Dar de baja</button>
-                                            </form>
-                                        </c:if>
-                                    </td>
-                                </c:if>
+                                <td><c:out value="${g.id}"/></td>
+                                <td><c:out value="${g.numeroGarage}"/></td>
+                                <td><fmt:formatNumber value="${g.lecturaLuz}" maxFractionDigits="2"/></td>
+                                <td><c:out value="${g.servicioMantenimiento ? 'Sí' : 'No'}"/></td>
+                                <td><c:out value="${g.zonaId}"/></td>
                             </tr>
                         </c:forEach>
                         </tbody>
                     </table>
+                </c:when>
+                <c:otherwise>
+                    <div class="p-4 text-center text-muted"><p class="mb-0">El socio no tiene cocheras compradas.</p></div>
+                </c:otherwise>
+            </c:choose>
+        </div>
+    </div>
+</c:if>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-dark text-white fw-bold"><c:out value="${titulo}"/></div>
+    <div class="card-body p-0">
+        <c:choose>
+            <c:when test="${not empty lista}">
+                <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0 align-middle">
+                    <thead class="table-light">
+                    <tr>
+                    <th>ID</th>
+                    <th>Socio (ID)</th>
+                    <th>Cochera (ID)</th>
+                    <th>Fecha de compra</th>
+                    <c:if test="${esBajas}"><th>Estado</th></c:if>
+                    <c:if test="${not esBajas and (puedeVer or puedeEliminar)}"><th class="text-end">Acciones</th></c:if>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <c:forEach var="r" items="${lista}">
+                    <tr>
+                    <td><c:out value="${r.id}"/></td>
+                    <td><c:out value="${r.socioId}"/></td>
+                    <td><c:out value="${r.garageId}"/></td>
+                    <td><fmt:parseDate value="${r.fechaCompraGarage}" pattern="yyyy-MM-dd" var="fecha"/><fmt:formatDate value="${fecha}" pattern="dd/MM/yyyy"/></td>
+                    <c:if test="${esBajas}">
+                        <td>
+                            <c:choose>
+                                <c:when test="${r.activo}"><span class="badge bg-success">Activo</span></c:when>
+                                <c:otherwise><span class="badge bg-danger">Baja</span></c:otherwise>
+                            </c:choose>
+                        </td>
+                    </c:if>
+                    <c:if test="${not esBajas and (puedeVer or puedeEliminar)}">
+                        <td class="text-end">
+                            <c:if test="${puedeVer}">
+                                <a class="btn btn-warning btn-sm" href="${fn:escapeXml(raiz)}/ver/${fn:escapeXml(r.id)}">
+                                    <c:out value="${puedeEditar ? 'Editar' : 'Ver'}"/>
+                                </a>
+                            </c:if>
+                            <c:if test="${puedeEliminar}">
+                                <form action="${fn:escapeXml(raiz)}/eliminar" method="post" class="d-inline">
+                                    <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
+                                    <input type="hidden" name="id" value="${fn:escapeXml(r.id)}"/>
+                                    <button type="submit" class="btn btn-danger btn-sm">Dar de baja</button>
+                                </form>
+                            </c:if>
+                        </td>
+                    </c:if>
+                    </tr>
+                    </c:forEach>
+                    </tbody>
+                </table>
                 </div>
             </c:when>
             <c:otherwise>
-                <div class="p-4 text-center text-muted">No hay compras de garages para mostrar.</div>
+                <div class="p-4 text-center text-muted"><p class="mb-0">No hay registros para mostrar.</p></div>
             </c:otherwise>
         </c:choose>
     </div>
+    <c:if test="${puedeEliminar and not esBajas}">
+        <div class="card-footer text-muted small">"Dar de baja" es una baja lógica: el registro queda inactivo y se ve en el listado de bajas o en el historial.</div>
+    </c:if>
 </div>
 
-<%-- BUSQUEDA POR SOCIO (solo gestion del ADMINISTRADOR) --%>
-<c:if test="${not empty rutaBase and not modoBajas}">
+<c:if test="${editando or (puedeCrear and empty registro)}">
     <div class="card shadow-sm mb-4">
-        <div class="card-header bg-light fw-bold">Buscar garages de un socio</div>
+        <div class="card-header bg-dark text-white fw-bold">
+            <c:out value="${editando ? 'Editar compra' : 'Nuevo registro: compra'}"/>
+        </div>
         <div class="card-body">
-            <form action="${pageContext.request.contextPath}${rutaBase}/de-socio" method="GET" class="row g-3">
-                <div class="col-md-4">
-                    <label for="busSocio" class="form-label">ID del socio</label>
-                    <input type="number" min="1" class="form-control" id="busSocio" name="socioId" required>
-                </div>
-                <div class="col-md-4 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary me-2">Buscar</button>
-                    <a href="${pageContext.request.contextPath}${rutaBase}" class="btn btn-secondary">Limpiar</a>
+            <form action="${fn:escapeXml(raiz)}/${editando ? 'editar' : 'crear'}" method="post" class="row g-3">
+                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
+                <c:if test="${editando}"><input type="hidden" name="id" value="${fn:escapeXml(registro.id)}"/></c:if>
+            <div class="col-md-4">
+                <label class="form-label" for="socioId">Socio (ID)</label>
+                <input type="number" class="form-control" id="socioId" name="socioId" value="${fn:escapeXml(registro.socioId)}" required min="1">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="garageId">Cochera (ID)</label>
+                <input type="number" class="form-control" id="garageId" name="garageId" value="${fn:escapeXml(registro.garageId)}" required min="1">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="fechaCompraGarage">Fecha de compra</label>
+                <input type="date" class="form-control" id="fechaCompraGarage" name="fechaCompraGarage" value="${fn:escapeXml(registro.fechaCompraGarage)}" required>
+            </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary"><c:out value="${editando ? 'Guardar cambios' : 'Registrar'}"/></button>
+                    <c:if test="${editando}"><a class="btn btn-secondary" href="${fn:escapeXml(raiz)}">Cancelar</a></c:if>
                 </div>
             </form>
         </div>

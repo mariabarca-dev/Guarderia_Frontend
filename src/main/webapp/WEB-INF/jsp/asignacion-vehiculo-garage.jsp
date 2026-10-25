@@ -1,201 +1,129 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page contentType="text/html;charset=UTF-8" pageEncoding="UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<%--
+  OCUPACIONES (asignaciones vehículo-garage, solo ADMINISTRADOR).
+  Fragmento incluido por layout.jsp (sin html/head/body). Toda salida con c:out o fn:escapeXml. Sin JavaScript.
+  Lo usan: AsignacionVehiculoGarageController (/administrador/gestion-ocupaciones).
 
-<%-- DECLARACIÓN DE BEANS Y VARIABLES DE SESIÓN --%>
-<jsp:useBean id="usuarioSesion" type="java.lang.Object" scope="session" />
+  Model que arma el controller:
+    titulo, base (ruta web de la tabla), lista (List<Map>), registro (Map a ver/editar, puede ser null),
+    esBajas (muestra Estado y oculta acciones), puedeVer, puedeCrear, puedeEditar, puedeEliminar,
+    puedeConsultar (muestra la tarjeta de consultas; solo ADMINISTRADOR).
+--%>
+<c:set var="raiz" value="${pageContext.request.contextPath}${base}"/>
+<c:set var="editando" value="${not empty registro and puedeEditar}"/>
 
-<%--noinspection ElSpecValidation--%>
-<c:set var="userRole" value="${sessionScope.userRole}" />
-
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <title>Dashboard - Asignaciones de Vehículos a Garages</title>
-    <!-- Inclusión centralizada del head (Favicon, Bootstrap y CSS personalizado) -->
-    <jsp:include page="head.jsp" />
-</head>
-<body class="bg-light">
-
-<!-- BARRA DE NAVEGACIÓN SUPERIOR -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow-sm">
-    <div class="container-fluid">
-        <a class="navbar-brand fw-bold" href="#">Panel de Gestión de Asignaciones (Vehículo - Garage)</a>
-        <div class="d-flex align-items-center">
-            <span class="navbar-text me-3 text-light">
-                Usuario: <strong><c:out value="${usuarioSesion.nombre}" /></strong>
-                (<span class="badge bg-secondary"><c:out value="${userRole}" /></span>)
-            </span>
-            <!-- Cierre de sesión por formulario POST con token CSRF -->
-            <form action="${pageContext.request.contextPath}/logout" method="POST" class="m-0">
-                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
-                <button type="submit" class="btn btn-outline-danger btn-sm">Cerrar Sesión</button>
+<c:if test="${puedeConsultar}">
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light fw-bold">Consultas</div>
+        <div class="card-body">
+            <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-outline-dark btn-sm" href="${fn:escapeXml(raiz)}">Listado</a>
+            <a class="btn btn-outline-dark btn-sm" href="${fn:escapeXml(raiz)}/historial">Historial (activas y dadas de baja)</a>
+            </div>
+            <form action="${fn:escapeXml(raiz)}/de-rodado" method="get" class="row g-2 align-items-end mt-2">
+                <div class="col-sm-6 col-md-4">
+                    <label class="form-label">Ocupación de un rodado (ID del rodado)</label>
+                    <input type="number" class="form-control" name="nroRodado" required min="1">
+                </div>
+                <div class="col-auto"><button type="submit" class="btn btn-primary">Buscar</button></div>
             </form>
         </div>
     </div>
-</nav>
+</c:if>
 
-<div class="container-fluid px-4">
-
-    <!-- ALERTAS Y MENSAJES INFORMATIVOS DEL SERVIDOR -->
-    <c:if test="${not empty mensajeExito}">
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <strong>¡Éxito!</strong> <c:out value="${mensajeExito}" />
-        </div>
-    </c:if>
-    <c:if test="${not empty mensajeError}">
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <strong>Error:</strong> <c:out value="${mensajeError}" />
-        </div>
-    </c:if>
-
-    <!-- EVALUACIÓN DE ROLES CON JSTL: ACCESO A VISTA DE NEGOCIO (SOCIO, EMPLEADO, ADMINISTRADOR) -->
-    <c:choose>
-        <c:when test="${userRole == 'ADMINISTRADOR' || userRole == 'EMPLEADO' || userRole == 'SOCIO'}">
-
-            <!-- TARJETA PRINCIPAL: LISTADO Y REGISTRO DE ASIGNACIONES A GARAGE -->
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-dark text-white fw-bold d-flex justify-content-between align-items-center">
-                    <span>Listado de Asignaciones de Vehículos a Garages</span>
-
-                        <%-- BOTÓN DE CREACIÓN: VISIBLE EXCLUSIVAMENTE PARA ADMINISTRADORES DE NEGOCIO --%>
-                    <c:if test="${userRole == 'ADMINISTRADOR'}">
-                        <form action="${pageContext.request.contextPath}/asignaciones-garage/nueva" method="GET" class="m-0">
-                            <button type="submit" class="btn btn-success btn-sm">+ Asignar Vehículo a Garage</button>
-                        </form>
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-dark text-white fw-bold"><c:out value="${titulo}"/></div>
+    <div class="card-body p-0">
+        <c:choose>
+            <c:when test="${not empty lista}">
+                <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0 align-middle">
+                    <thead class="table-light">
+                    <tr>
+                    <th>ID</th>
+                    <th>Rodado (ID)</th>
+                    <th>Cochera (ID)</th>
+                    <th>Fecha de asignación</th>
+                    <c:if test="${esBajas}"><th>Estado</th></c:if>
+                    <c:if test="${not esBajas and (puedeVer or puedeEliminar)}"><th class="text-end">Acciones</th></c:if>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <c:forEach var="r" items="${lista}">
+                    <tr>
+                    <td><c:out value="${r.id}"/></td>
+                    <td><c:out value="${r.vehiculoId}"/></td>
+                    <td><c:out value="${r.garageId}"/></td>
+                    <td><fmt:parseDate value="${r.fechaAsignacionGarage}" pattern="yyyy-MM-dd" var="fecha"/><fmt:formatDate value="${fecha}" pattern="dd/MM/yyyy"/></td>
+                    <c:if test="${esBajas}">
+                        <td>
+                            <c:choose>
+                                <c:when test="${r.activo}"><span class="badge bg-success">Activo</span></c:when>
+                                <c:otherwise><span class="badge bg-danger">Baja</span></c:otherwise>
+                            </c:choose>
+                        </td>
                     </c:if>
+                    <c:if test="${not esBajas and (puedeVer or puedeEliminar)}">
+                        <td class="text-end">
+                            <c:if test="${puedeVer}">
+                                <a class="btn btn-warning btn-sm" href="${fn:escapeXml(raiz)}/ver/${fn:escapeXml(r.id)}">
+                                    <c:out value="${puedeEditar ? 'Editar' : 'Ver'}"/>
+                                </a>
+                            </c:if>
+                            <c:if test="${puedeEliminar}">
+                                <form action="${fn:escapeXml(raiz)}/eliminar" method="post" class="d-inline">
+                                    <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
+                                    <input type="hidden" name="id" value="${fn:escapeXml(r.id)}"/>
+                                    <button type="submit" class="btn btn-danger btn-sm">Dar de baja</button>
+                                </form>
+                            </c:if>
+                        </td>
+                    </c:if>
+                    </tr>
+                    </c:forEach>
+                    </tbody>
+                </table>
                 </div>
-
-                <div class="card-body p-0">
-                    <c:choose>
-                        <c:when test="${not empty listaAsignacionesGarage}">
-                            <div class="table-responsive">
-                                <table class="table table-hover table-striped mb-0 align-middle">
-                                    <thead class="table-light">
-                                    <tr>
-                                        <th>ID Vehículo</th>
-                                        <th>Vehículo / Marca</th>
-                                        <th>Matrícula</th>
-                                        <th>Tipo</th>
-                                        <th>Garage Asignado (ID / Num)</th>
-                                        <th>Fecha de Asignación</th>
-
-                                            <%-- COLUMNA DE ACCIONES SOLAMENTE PARA ADMINISTRADORES DE NEGOCIO --%>
-                                        <c:if test="${userRole == 'ADMINISTRADOR'}">
-                                            <th class="text-end">Acciones</th>
-                                        </c:if>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    <c:forEach var="asig" items="${listaAsignacionesGarage}">
-                                        <tr>
-                                            <td>
-                                                <span class="badge bg-secondary">
-                                                    <c:out value="${asig.vehiculo.id != null ? asig.vehiculo.id : 'N/A'}" />
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <strong>
-                                                    <c:out value="${asig.vehiculo.nombre != null ? asig.vehiculo.nombre : 'Sin Vehículo'}" />
-                                                </strong>
-                                            </td>
-                                            <td>
-                                                <span class="badge bg-secondary">
-                                                    <c:out value="${asig.vehiculo.matricula != null ? asig.vehiculo.matricula : 'N/A'}" />
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span class="badge bg-info text-dark">
-                                                    <c:out value="${asig.vehiculo.tipo != null ? asig.vehiculo.tipo : 'N/A'}" />
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span class="badge bg-dark fs-6">
-                                                    Garage #<c:out value="${asig.garage.id != null ? asig.garage.id : (asig.garage.numero != null ? asig.garage.numero : 'N/A')}" />
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <c:choose>
-                                                    <c:when test="${not empty asig.fechaAsignacionGarage}">
-                                                        <span class="badge bg-light text-dark border">
-                                                            <c:out value="${asig.fechaAsignacionGarage}" />
-                                                        </span>
-                                                    </c:when>
-                                                    <c:otherwise>
-                                                        <em class="text-muted">Sin Fecha Registrada</em>
-                                                    </c:otherwise>
-                                                </c:choose>
-                                            </td>
-
-                                                <%-- BOTONES DE ACCIÓN EXCLUSIVOS PARA ADMINISTRADORES DE NEGOCIO --%>
-                                            <c:if test="${userRole == 'ADMINISTRADOR'}">
-                                                <td class="text-end">
-                                                    <form action="${pageContext.request.contextPath}/asignaciones-garage/editar" method="GET" class="d-inline">
-                                                        <input type="hidden" name="vehiculoId" value="${asig.vehiculo.id}">
-                                                        <input type="hidden" name="garageId" value="${asig.garage.id}">
-                                                        <button type="submit" class="btn btn-warning btn-sm">Editar</button>
-                                                    </form>
-                                                    <form action="${pageContext.request.contextPath}/asignaciones-garage/eliminar" method="POST" class="d-inline">
-                                                        <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
-                                                        <input type="hidden" name="vehiculoId" value="${asig.vehiculo.id}">
-                                                        <input type="hidden" name="garageId" value="${asig.garage.id}">
-                                                        <button type="submit" class="btn btn-danger btn-sm">Desasignar</button>
-                                                    </form>
-                                                </td>
-                                            </c:if>
-                                        </tr>
-                                    </c:forEach>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </c:when>
-                        <c:otherwise>
-                            <div class="p-4 text-center text-muted">
-                                <p class="mb-0">No hay asignaciones de vehículos a garages registradas en el sistema.</p>
-                            </div>
-                        </c:otherwise>
-                    </c:choose>
-                </div>
-            </div>
-
-            <!-- FORMULARIO DE FILTRADO / BÚSQUEDA TRADICIONAL (GET, CERO JAVASCRIPT) -->
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-light fw-bold">
-                    Filtrar Asignaciones
-                </div>
-                <div class="card-body">
-                    <form action="${pageContext.request.contextPath}/asignaciones-garage/buscar" method="GET" class="row g-3">
-                        <div class="col-md-3">
-                            <label for="vehiculoMatricula" class="form-label">Matrícula Vehículo</label>
-                            <input type="text" class="form-control" id="vehiculoMatricula" name="vehiculo.matricula" value="${param['vehiculo.matricula']}" placeholder="Ej. ABC-1234">
-                        </div>
-                        <div class="col-md-3">
-                            <label for="garageId" class="form-label">ID / N° Garage</label>
-                            <input type="number" class="form-control" id="garageId" name="garage.id" value="${param['garage.id']}" placeholder="Ej. 101">
-                        </div>
-                        <div class="col-md-3">
-                            <label for="fechaAsignacionGarage" class="form-label">Fecha Asignación</label>
-                            <input type="date" class="form-control" id="fechaAsignacionGarage" name="fechaAsignacionGarage" value="${param.fechaAsignacionGarage}">
-                        </div>
-                        <div class="col-md-3 d-flex align-items-end">
-                            <button type="submit" class="btn btn-primary me-2">Buscar</button>
-                            <a href="${pageContext.request.contextPath}/asignaciones-garage/dashboard" class="btn btn-secondary">Limpiar</a>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-        </c:when>
-
-        <%-- DENEGACIÓN DE ACCESO EN CASO DE ROL NO AUTORIZADO (INCLUYE SYSADMIN AL SER PANTALLA DE NEGOCIO) --%>
-        <c:otherwise>
-            <div class="alert alert-danger shadow-sm" role="alert">
-                <h4 class="alert-heading">Acceso Restringido</h4>
-                <p class="mb-0">Su rol actual (<strong><c:out value="${userRole}" /></strong>) no tiene los permisos necesarios para visualizar la gestión de asignaciones de vehículos a garages.</p>
-            </div>
-        </c:otherwise>
-    </c:choose>
-
+            </c:when>
+            <c:otherwise>
+                <div class="p-4 text-center text-muted"><p class="mb-0">No hay registros para mostrar.</p></div>
+            </c:otherwise>
+        </c:choose>
+    </div>
+    <c:if test="${puedeEliminar and not esBajas}">
+        <div class="card-footer text-muted small">"Dar de baja" es una baja lógica: el registro queda inactivo y se ve en el listado de bajas o en el historial.</div>
+    </c:if>
 </div>
 
-</body>
-</html>
+<c:if test="${editando or (puedeCrear and empty registro)}">
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-dark text-white fw-bold">
+            <c:out value="${editando ? 'Editar ocupación' : 'Nuevo registro: ocupación'}"/>
+        </div>
+        <div class="card-body">
+            <form action="${fn:escapeXml(raiz)}/${editando ? 'editar' : 'crear'}" method="post" class="row g-3">
+                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
+                <c:if test="${editando}"><input type="hidden" name="id" value="${fn:escapeXml(registro.id)}"/></c:if>
+            <div class="col-md-4">
+                <label class="form-label" for="vehiculoId">Rodado (ID)</label>
+                <input type="number" class="form-control" id="vehiculoId" name="vehiculoId" value="${fn:escapeXml(registro.vehiculoId)}" required min="1">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="garageId">Cochera (ID)</label>
+                <input type="number" class="form-control" id="garageId" name="garageId" value="${fn:escapeXml(registro.garageId)}" required min="1">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="fechaAsignacionGarage">Fecha de asignación</label>
+                <input type="date" class="form-control" id="fechaAsignacionGarage" name="fechaAsignacionGarage" value="${fn:escapeXml(registro.fechaAsignacionGarage)}" required>
+            </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary"><c:out value="${editando ? 'Guardar cambios' : 'Registrar'}"/></button>
+                    <c:if test="${editando}"><a class="btn btn-secondary" href="${fn:escapeXml(raiz)}">Cancelar</a></c:if>
+                </div>
+            </form>
+        </div>
+    </div>
+</c:if>
