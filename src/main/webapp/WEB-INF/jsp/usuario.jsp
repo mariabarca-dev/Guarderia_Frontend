@@ -75,8 +75,15 @@
             </c:choose>
         </div>
         <div class="card-body p-0">
+            <%-- En la vista de bajas solo se muestran las cuentas dadas de baja (el back devuelve todas) --%>
+            <c:set var="hayFilas" value="${not modoBajas}"/>
+            <c:if test="${modoBajas}">
+                <c:forEach var="x" items="${registros}">
+                    <c:if test="${x.activo == false}"><c:set var="hayFilas" value="true"/></c:if>
+                </c:forEach>
+            </c:if>
             <c:choose>
-                <c:when test="${not empty registros}">
+                <c:when test="${not empty registros and hayFilas}">
                     <div class="table-responsive">
                         <table class="table table-hover table-striped mb-0 align-middle">
                             <thead class="table-light">
@@ -92,6 +99,7 @@
                             </thead>
                             <tbody>
                             <c:forEach var="u" items="${registros}">
+                            <c:if test="${not modoBajas or u.activo == false}">
                                 <tr>
                                     <td><c:out value="${u.id}"/></td>
                                     <td><strong><c:out value="${u.nombre}"/> <c:out value="${u.apellido}"/></strong></td>
@@ -109,6 +117,7 @@
                                            class="btn btn-secondary btn-sm">Ver detalle</a>
                                     </td>
                                 </tr>
+                            </c:if>
                             </c:forEach>
                             </tbody>
                         </table>
