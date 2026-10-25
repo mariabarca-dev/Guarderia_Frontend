@@ -51,9 +51,17 @@ public class EmpleadoService {
         return backendClientService.post("/usuarios/empleados", body);
     }
 
+    /**
+     * Edita un empleado. La clave es opcional: si el formulario la trae vacía se envía
+     * como nula y el back conserva la clave actual; si trae un valor, el back la reemplaza (cifrada).
+     *
+     * @param id         id del empleado a editar
+     * @param formulario campos del formulario de edición
+     * @return respuesta del back con el empleado actualizado
+     */
     public Object editarEmpleado(Integer id, Map<String, String> formulario) {
         Map<String, Object> body = BackendClientService.armarCuerpo(formulario,
-                "codigo", "nombre", "apellido", "especialidad", "direccion", "telefono", "dni", "nombreUsuario");
+                "codigo", "nombre", "apellido", "especialidad", "direccion", "telefono", "dni", "nombreUsuario", "clave");
         return backendClientService.put("/usuarios/empleados/" + id, body);
     }
 

@@ -63,9 +63,17 @@ public class SocioService {
         return backendClientService.post("/usuarios/socios", body);
     }
 
+    /**
+     * Edita un socio. La clave es opcional: si el formulario la trae vacía se envía
+     * como nula y el back conserva la clave actual; si trae un valor, el back la reemplaza (cifrada).
+     *
+     * @param id         id del socio a editar
+     * @param formulario campos del formulario de edición
+     * @return respuesta del back con el socio actualizado
+     */
     public Object editarSocio(Integer id, Map<String, String> formulario) {
         Map<String, Object> body = BackendClientService.armarCuerpo(formulario,
-                "dni", "nombre", "apellido", "direccion", "telefono", "fechaIngreso", "nombreUsuario");
+                "dni", "nombre", "apellido", "direccion", "telefono", "fechaIngreso", "nombreUsuario", "clave");
         return backendClientService.put("/usuarios/socios/" + id, body);
     }
 

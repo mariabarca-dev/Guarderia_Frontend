@@ -104,12 +104,23 @@
                         <input type="text" class="form-control" id="nombreUsuario" name="nombreUsuario" maxlength="50" required
                                value="<c:out value='${registro.nombreUsuario}'/>">
                     </div>
-                    <c:if test="${empty registro}">
-                        <div class="col-md-4">
-                            <label for="clave" class="form-label">Contraseña</label>
-                            <input type="password" class="form-control" id="clave" name="clave" maxlength="100" required>
-                        </div>
-                    </c:if>
+                    <c:choose>
+                        <c:when test="${empty registro}">
+                            <div class="col-md-4">
+                                <label for="clave" class="form-label">Contraseña</label>
+                                <input type="password" class="form-control" id="clave" name="clave" maxlength="100" required
+                                       autocomplete="new-password" pattern="[^&lt;&gt;]*" title="No se permiten los caracteres &lt; y &gt;">
+                            </div>
+                        </c:when>
+                        <c:otherwise>
+                            <div class="col-md-4">
+                                <label for="clave" class="form-label">Nueva contraseña (opcional)</label>
+                                <input type="password" class="form-control" id="clave" name="clave" maxlength="100"
+                                       autocomplete="new-password" pattern="[^&lt;&gt;]*" title="No se permiten los caracteres &lt; y &gt;">
+                                <div class="form-text">Dejala vacía para no cambiar la contraseña actual.</div>
+                            </div>
+                        </c:otherwise>
+                    </c:choose>
                     <div class="col-md-4">
                         <label for="direccion" class="form-label">Dirección</label>
                         <input type="text" class="form-control" id="direccion" name="direccion" maxlength="150"
