@@ -237,3 +237,139 @@ nav .nav-link:hover {
 .badge.rol-ADMINISTRADOR { background-color: #4da3ff; color: #0b1033; }
 .badge.rol-SOCIO         { background-color: #7c6cff; color: #ffffff; }
 .badge.rol-EMPLEADO      { background-color: #2f6fed; color: #ffffff; }
+/* ==========================================================================
+   Adaptación a celulares y tablets (solo CSS, sin JavaScript).
+   La etiqueta viewport ya está en head.jsp.
+   ========================================================================== */
+
+/* Evita que la página se desborde hacia los costados */
+html, body {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Tablets y celulares (hasta 767 px de ancho) */
+@media (max-width: 767.98px) {
+
+    /* Encabezado: logo arriba y usuario debajo, sin que se corten */
+    header.navbar .container-fluid {
+        flex-wrap: wrap;
+        gap: 0.25rem;
+    }
+
+    header.navbar .navbar-brand {
+        font-size: 1.05rem;
+        margin-right: 0;
+    }
+
+    header.navbar .container-fluid > span.text-white {
+        font-size: 0.9rem;
+    }
+
+    /* Menú: las opciones se acomodan en varias líneas y quedan fáciles de tocar */
+    nav .container {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+
+    nav .nav-link {
+        padding: 0.55rem 0.7rem;
+        font-size: 0.95rem;
+    }
+
+    nav form {
+        margin-left: 0 !important;
+        width: 100%;
+    }
+
+    nav form .btn {
+        width: 100%;
+        padding: 0.5rem;
+    }
+
+    /* Contenido principal con menos margen lateral */
+    main.container {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+
+    h1, .h1 { font-size: 1.6rem; }
+    h2, .h2 { font-size: 1.4rem; }
+    h3, .h3 { font-size: 1.2rem; }
+    h4, .h4, h5, .h5 { font-size: 1.1rem; }
+
+    /* Campos y botones cómodos para el dedo (16 px evita el zoom automático en iPhone) */
+    .form-control,
+    .form-select {
+        font-size: 16px;
+        min-height: 44px;
+    }
+
+    .btn {
+        min-height: 40px;
+    }
+
+    /* Formularios en una sola columna con botones a todo el ancho */
+    form .btn-primary,
+    form .btn-success {
+        width: 100%;
+    }
+
+    /* Tablas: se deslizan hacia los costados en lugar de romper la pantalla */
+    .table {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        white-space: nowrap;
+        font-size: 0.9rem;
+    }
+
+    .table th,
+    .table td {
+        padding: 0.5rem 0.6rem;
+    }
+
+    /* Botones de acciones (Editar / Dar de baja) en la tabla, más compactos */
+    .table .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.8rem;
+        min-height: 32px;
+    }
+
+    /* Tarjetas */
+    .card-body {
+        padding: 0.9rem;
+    }
+
+    .card.card-login {
+        margin-left: 0.25rem;
+        margin-right: 0.25rem;
+    }
+
+    .card-login .card-body {
+        padding: 1.25rem;
+    }
+
+    /* Pie de página */
+    footer small {
+        font-size: 0.8rem;
+    }
+}
+
+/* Celulares chicos (hasta 400 px) */
+@media (max-width: 400px) {
+    nav .nav-link {
+        padding: 0.5rem 0.55rem;
+        font-size: 0.9rem;
+    }
+
+    .table {
+        font-size: 0.82rem;
+    }
+}
