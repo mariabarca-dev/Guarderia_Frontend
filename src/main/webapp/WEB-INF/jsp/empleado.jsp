@@ -279,7 +279,7 @@
                             <tr>
                                 <th>ID</th>
                                 <th>Código</th>
-                                <th>Nombre y apellido</th>
+                                <th class="text-nowrap">Nombre y apellido</th>
                                 <th>Especialidad</th>
                                 <th>Usuario</th>
                                 <th>Teléfono</th>
@@ -309,23 +309,26 @@
                                     </c:if>
                                     <c:if test="${not modoBajas}">
                                         <td class="text-end">
-                                            <c:if test="${esAdmin}">
-                                                <a href="${pageContext.request.contextPath}/administrador/cuentas-empleados/<c:out value='${e.id}'/>/sus-sectores"
-                                                   class="btn btn-outline-secondary btn-sm">Sectores</a>
-                                                <a href="${pageContext.request.contextPath}/administrador/cuentas-empleados/<c:out value='${e.id}'/>/sus-encargos"
-                                                   class="btn btn-outline-secondary btn-sm">Encargos</a>
-                                            </c:if>
-                                            <c:if test="${puedeEditar}">
-                                                <a href="${pageContext.request.contextPath}<c:out value='${rutaBase}'/>/ver/<c:out value='${e.id}'/>"
-                                                   class="btn btn-warning btn-sm">Editar</a>
-                                            </c:if>
-                                            <c:if test="${puedeEliminar}">
-                                                <form action="${pageContext.request.contextPath}<c:out value='${rutaBase}'/>/eliminar" method="POST" class="d-inline">
-                                                    <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
-                                                    <input type="hidden" name="id" value="<c:out value='${e.id}'/>"/>
-                                                    <button type="submit" class="btn btn-danger btn-sm">Dar de baja</button>
-                                                </form>
-                                            </c:if>
+                                          <%-- Grilla de 2 x 2 con botones del mismo ancho: consultas arriba (Sectores, Encargos) y acciones abajo (Editar, Dar de baja) --%>
+                                          <div class="d-grid gap-2 ms-auto" style="grid-template-columns: 1fr 1fr; width: 250px;">
+                                              <c:if test="${esAdmin}">
+                                                  <a href="${pageContext.request.contextPath}/administrador/cuentas-empleados/<c:out value='${e.id}'/>/sus-sectores"
+                                                     class="btn btn-outline-secondary btn-sm">Sectores</a>
+                                                  <a href="${pageContext.request.contextPath}/administrador/cuentas-empleados/<c:out value='${e.id}'/>/sus-encargos"
+                                                     class="btn btn-outline-secondary btn-sm">Encargos</a>
+                                              </c:if>
+                                              <c:if test="${puedeEditar}">
+                                                  <a href="${pageContext.request.contextPath}<c:out value='${rutaBase}'/>/ver/<c:out value='${e.id}'/>"
+                                                     class="btn btn-warning btn-sm">Editar</a>
+                                              </c:if>
+                                              <c:if test="${puedeEliminar}">
+                                                  <form action="${pageContext.request.contextPath}<c:out value='${rutaBase}'/>/eliminar" method="POST" class="d-grid">
+                                                      <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
+                                                      <input type="hidden" name="id" value="<c:out value='${e.id}'/>"/>
+                                                      <button type="submit" class="btn btn-danger btn-sm">Dar de baja</button>
+                                                  </form>
+                                              </c:if>
+                                          </div>
                                         </td>
                                     </c:if>
                                 </tr>

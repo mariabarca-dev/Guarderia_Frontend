@@ -311,7 +311,7 @@
                             <thead class="table-light">
                             <tr>
                                 <th>ID</th>
-                                <th>Nombre y apellido</th>
+                                <th class="text-nowrap">Nombre y apellido</th>
                                 <th>DNI</th>
                                 <th>Usuario</th>
                                 <th>Teléfono</th>
@@ -347,6 +347,7 @@
                                     </c:if>
                                     <c:if test="${not modoBajas}">
                                         <td class="text-end">
+                                          <div class="d-flex flex-wrap justify-content-end gap-1">
                                             <c:if test="${esAdmin}">
                                                 <a href="${pageContext.request.contextPath}/administrador/cuentas-socios/<c:out value='${s.id}'/>/sus-rodados"
                                                    class="btn btn-outline-secondary btn-sm">Rodados</a>
@@ -364,6 +365,7 @@
                                                     <button type="submit" class="btn btn-danger btn-sm">Dar de baja</button>
                                                 </form>
                                             </c:if>
+                                          </div>
                                         </td>
                                     </c:if>
                                 </tr>

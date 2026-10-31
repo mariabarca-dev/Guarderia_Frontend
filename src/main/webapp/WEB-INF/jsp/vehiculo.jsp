@@ -11,7 +11,8 @@
   Model que arma el controller:
     titulo, base (ruta web de la tabla), lista (List<Map>), registro (Map a ver/editar, puede ser null),
     esBajas (muestra Estado y oculta acciones), puedeVer, puedeCrear, puedeEditar, puedeEliminar,
-    puedeConsultar (muestra la tarjeta de consultas; solo ADMINISTRADOR).
+    puedeConsultar (muestra la tarjeta de consultas; solo ADMINISTRADOR). Cuando es false (SOCIO / EMPLEADO)
+    la tabla oculta las columnas ID y Socio (ID), que no les aportan nada.
 --%>
 <c:set var="raiz" value="${pageContext.request.contextPath}${base}"/>
 <c:set var="editando" value="${not empty registro and puedeEditar}"/>
@@ -26,7 +27,7 @@
             </div>
             <form action="${fn:escapeXml(raiz)}/buscar-patente" method="get" class="row g-2 align-items-end mt-2">
                 <div class="col-sm-6 col-md-4">
-                    <label class="form-label">Buscar por patente</label>
+                    <label class="form-label">Buscar por matrícula</label>
                     <input type="text" class="form-control" name="patente" required maxlength="50">
                 </div>
                 <div class="col-auto"><button type="submit" class="btn btn-primary">Buscar</button></div>
@@ -58,13 +59,13 @@
                 <table class="table table-hover table-striped mb-0 align-middle">
                     <thead class="table-light">
                     <tr>
-                    <th>ID</th>
+                    <c:if test="${puedeConsultar}"><th>ID</th></c:if>
                     <th>Nombre</th>
-                    <th>Patente</th>
+                    <th>Matrícula</th>
                     <th>Tipo</th>
                     <th>Profundidad (m)</th>
                     <th>Ancho (m)</th>
-                    <th>Socio (ID)</th>
+                    <c:if test="${puedeConsultar}"><th>Socio (ID)</th></c:if>
                     <c:if test="${esBajas}"><th>Estado</th></c:if>
                     <c:if test="${not esBajas and (puedeVer or puedeEliminar)}"><th class="text-end">Acciones</th></c:if>
                     </tr>
@@ -72,13 +73,13 @@
                     <tbody>
                     <c:forEach var="r" items="${lista}">
                     <tr>
-                    <td><c:out value="${r.id}"/></td>
+                    <c:if test="${puedeConsultar}"><td><c:out value="${r.id}"/></td></c:if>
                     <td><c:out value="${r.nombre}"/></td>
                     <td><c:out value="${r.matricula}"/></td>
                     <td><span class="badge bg-info text-dark"><c:out value="${fn:replace(r.tipo, '_', ' ')}"/></span></td>
                     <td><fmt:formatNumber value="${r.profundidad}" maxFractionDigits="2"/></td>
                     <td><fmt:formatNumber value="${r.ancho}" maxFractionDigits="2"/></td>
-                    <td><c:out value="${r.socioId}"/></td>
+                    <c:if test="${puedeConsultar}"><td><c:out value="${r.socioId}"/></td></c:if>
                     <c:if test="${esBajas}">
                         <td>
                             <c:choose>
@@ -126,7 +127,7 @@
             <table class="table table-striped mb-0">
                 <tbody>
                 <tr><th class="w-25">Nombre</th><td><c:out value="${registro.nombre}"/></td></tr>
-                <tr><th class="w-25">Patente</th><td><c:out value="${registro.matricula}"/></td></tr>
+                <tr><th class="w-25">Matrícula</th><td><c:out value="${registro.matricula}"/></td></tr>
                 <tr><th class="w-25">Tipo</th><td><span class="badge bg-info text-dark"><c:out value="${fn:replace(registro.tipo, '_', ' ')}"/></span></td></tr>
                 <tr><th class="w-25">Profundidad (m)</th><td><fmt:formatNumber value="${registro.profundidad}" maxFractionDigits="2"/></td></tr>
                 <tr><th class="w-25">Ancho (m)</th><td><fmt:formatNumber value="${registro.ancho}" maxFractionDigits="2"/></td></tr>
@@ -154,7 +155,7 @@
                 <input type="text" class="form-control" id="nombre" name="nombre" value="${fn:escapeXml(registro.nombre)}" maxlength="100">
             </div>
             <div class="col-md-4">
-                <label class="form-label" for="matricula">Patente</label>
+                <label class="form-label" for="matricula">Matrícula</label>
                 <input type="text" class="form-control" id="matricula" name="matricula" value="${fn:escapeXml(registro.matricula)}" required maxlength="50">
             </div>
             <div class="col-md-4">

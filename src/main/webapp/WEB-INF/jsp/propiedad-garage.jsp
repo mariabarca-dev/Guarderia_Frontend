@@ -10,7 +10,8 @@
   Model que arma el controller:
     titulo, base (ruta web de la tabla), lista (List<Map>), registro (Map a ver/editar, puede ser null),
     esBajas (muestra Estado y oculta acciones), puedeVer, puedeCrear, puedeEditar, puedeEliminar,
-    puedeConsultar (muestra la tarjeta de consultas; solo ADMINISTRADOR).
+    puedeConsultar (muestra la tarjeta de consultas; solo ADMINISTRADOR). Cuando es false (SOCIO)
+    la tabla oculta las columnas ID y Socio (ID), que no le aportan nada.
     garagesDelSocio y socioConsultado (opcionales): List<GarageResponse> de GET /propiedades-garage/socio/{id}.
 --%>
 <c:set var="raiz" value="${pageContext.request.contextPath}${base}"/>
@@ -77,9 +78,9 @@
                 <table class="table table-hover table-striped mb-0 align-middle">
                     <thead class="table-light">
                     <tr>
-                    <th>ID</th>
-                    <th>Socio (ID)</th>
-                    <th>Cochera (ID)</th>
+                    <c:if test="${puedeConsultar}"><th>ID</th></c:if>
+                    <c:if test="${puedeConsultar}"><th>Socio (ID)</th></c:if>
+                    <th>Nº de cochera</th>
                     <th>Fecha de compra</th>
                     <c:if test="${esBajas}"><th>Estado</th></c:if>
                     <c:if test="${not esBajas and (puedeVer or puedeEliminar)}"><th class="text-end">Acciones</th></c:if>
@@ -88,9 +89,9 @@
                     <tbody>
                     <c:forEach var="r" items="${lista}">
                     <tr>
-                    <td><c:out value="${r.id}"/></td>
-                    <td><c:out value="${r.socioId}"/></td>
-                    <td><c:out value="${r.garageId}"/></td>
+                    <c:if test="${puedeConsultar}"><td><c:out value="${r.id}"/></td></c:if>
+                    <c:if test="${puedeConsultar}"><td><c:out value="${r.socioId}"/></td></c:if>
+                    <td><c:out value="${r.garageNumero}"/></td>
                     <td><fmt:parseDate value="${r.fechaCompraGarage}" pattern="yyyy-MM-dd" var="fecha"/><fmt:formatDate value="${fecha}" pattern="dd/MM/yyyy"/></td>
                     <c:if test="${esBajas}">
                         <td>

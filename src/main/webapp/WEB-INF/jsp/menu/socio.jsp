@@ -2,7 +2,7 @@
 <ul class="nav">
     <li class="nav-item"><a class="nav-link text-white" href="${pageContext.request.contextPath}/socio/dash">Inicio</a></li>
     <li class="nav-item"><a class="nav-link text-white" href="${pageContext.request.contextPath}/socio/mi-perfil">Mi Perfil</a></li>
-    <li class="nav-item"><a class="nav-link text-white" href="${pageContext.request.contextPath}/socio/mis-vehiculos">Mis Vehículos</a></li>
+    <li class="nav-item"><a class="nav-link text-white" href="${pageContext.request.contextPath}/socio/mis-vehiculos">Mis Rodados</a></li>
     <li class="nav-item"><a class="nav-link text-white" href="${pageContext.request.contextPath}/socio/mis-cocheras">Mis Cocheras</a></li>
     <li class="nav-item"><a class="nav-link text-white" href="${pageContext.request.contextPath}/socio/mis-compras">Mis Compras</a></li>
     <li class="nav-item ms-auto">

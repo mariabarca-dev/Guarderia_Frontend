@@ -188,7 +188,7 @@ public class UsuarioController {
 
     @GetMapping("/socio/mis-vehiculos")
     public String misVehiculosSocio(Model model) {
-        model.addAttribute("titulo", "Mis Vehículos Registrados");
+        model.addAttribute("titulo", "Mis Rodados Registrados");
         model.addAttribute("base", "/socio/mis-vehiculos");
         model.addAttribute("lista", socioService.obtenerMisVehiculos());
         model.addAttribute("esBajas", false);
@@ -202,7 +202,7 @@ public class UsuarioController {
 
     @GetMapping("/socio/mis-vehiculos/ver/{id}")
     public String miVehiculoDetalleSocio(@PathVariable Integer id, Model model) {
-        model.addAttribute("titulo", "Detalle de Vehículo");
+        model.addAttribute("titulo", "Detalle de Rodado");
         model.addAttribute("base", "/socio/mis-vehiculos");
         model.addAttribute("lista", socioService.obtenerMisVehiculos());
         model.addAttribute("registro", socioService.obtenerMiVehiculoDetalle(id));
