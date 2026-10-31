@@ -1,13 +1,14 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <%--
   empleado.jsp - Fragmento (se incluye dentro de layout.jsp). Dos usos:
   1) LEGAJO DEL EMPLEADO (/empleado/mi-legajo): llega "datosEmpleado" (solo lectura).
   2) CUENTAS DE EMPLEADOS (/administrador|sysadmin/cuentas-empleados): llegan "registros", "rutaBase",
      "puedeCrear", "puedeEditar", "puedeEliminar", "modoBajas" y, en ver, "registro".
-     Consultas extra del ADMINISTRADOR: "resultado", "tituloResultado" y, solo en sus-encargos,
-     "resultadoEncargosDe" (id del empleado) para mostrar encargar / desencargar.
+     Consultas extra del ADMINISTRADOR: "resultado", "tituloResultado", "tipoResultado" ("sectores" o "encargos") y,
+     solo en sus-encargos, "resultadoEncargosDe" (id del empleado) para mostrar encargar / desencargar.
   El codigo del empleado se lee de "codigoEmpleado" o de "codigo" (el que traiga la respuesta del back).
 --%>
 <c:choose>
@@ -155,15 +156,15 @@
                 <a href="${pageContext.request.contextPath}<c:out value='${rutaBase}'/>" class="btn btn-light btn-sm">Cerrar</a>
             </div>
 
-            <%-- Encargar un vehiculo (solo en sus-encargos): el formulario envia el id del vehiculo --%>
+            <%-- Encargar un vehiculo (solo en sus-encargos): el formulario envia la matricula; el front busca el vehiculo en el back --%>
             <c:if test="${not empty resultadoEncargosDe}">
                 <div class="card-body border-bottom">
                     <form action="${pageContext.request.contextPath}/administrador/cuentas-empleados/<c:out value='${resultadoEncargosDe}'/>/encargar"
                           method="POST" class="row g-2 align-items-end">
                         <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
                         <div class="col-md-3">
-                            <label for="vehiculoId" class="form-label">ID del vehículo a encargar</label>
-                            <input type="number" class="form-control" id="vehiculoId" name="vehiculoId" min="1" required>
+                            <label for="matricula" class="form-label">Matrícula del vehículo a encargar</label>
+                            <input type="text" class="form-control" id="matricula" name="matricula" maxlength="50" required>
                         </div>
                         <div class="col-auto">
                             <button type="submit" class="btn btn-primary">Encargar vehículo</button>
@@ -177,32 +178,64 @@
                     <c:when test="${not empty resultado}">
                         <div class="table-responsive">
                             <table class="table table-hover table-striped mb-0 align-middle">
-                                <thead class="table-light">
-                                <tr>
-                                    <c:forEach var="col" items="${resultado[0]}">
-                                        <th><c:out value="${col.key}"/></th>
-                                    </c:forEach>
-                                    <c:if test="${not empty resultadoEncargosDe}"><th class="text-end">Acción</th></c:if>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                <c:forEach var="fila" items="${resultado}">
-                                    <tr>
-                                        <c:forEach var="celda" items="${fila}">
-                                            <td><c:out value="${celda.value}"/></td>
+                                <c:choose>
+                                    <%-- Encargos: vehículos a cargo del empleado (el empleado va en el título) --%>
+                                    <c:when test="${tipoResultado == 'encargos'}">
+                                        <thead class="table-light">
+                                        <tr>
+                                            <th>Nombre</th>
+                                            <th>Matrícula</th>
+                                            <th>Tipo</th>
+                                            <th>Profundidad (m)</th>
+                                            <th>Ancho (m)</th>
+                                            <th class="text-end">Acción</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <c:forEach var="fila" items="${resultado}">
+                                            <tr>
+                                                <td><c:out value="${fila.nombre}"/></td>
+                                                <td><c:out value="${fila.matricula}"/></td>
+                                                <td>
+                                                    <c:choose>
+                                                        <c:when test="${fila.tipo == 'MOTORHOME'}">Motorhome</c:when>
+                                                        <c:when test="${fila.tipo == 'CASA_RODANTE_DE_ARRASTRE'}">Casa rodante de arrastre</c:when>
+                                                        <c:when test="${fila.tipo == 'CARAVANA'}">Caravana</c:when>
+                                                        <c:when test="${fila.tipo == 'TRAILER'}">Trailer</c:when>
+                                                        <c:otherwise><c:out value="${fila.tipo}"/></c:otherwise>
+                                                    </c:choose>
+                                                </td>
+                                                <td><fmt:formatNumber value="${fila.profundidad}" maxFractionDigits="2"/></td>
+                                                <td><fmt:formatNumber value="${fila.ancho}" maxFractionDigits="2"/></td>
+                                                <td class="text-end">
+                                                    <form action="${pageContext.request.contextPath}/administrador/cuentas-empleados/<c:out value='${resultadoEncargosDe}'/>/desencargar/<c:out value='${fila.id}'/>"
+                                                          method="POST" class="d-inline">
+                                                        <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
+                                                        <button type="submit" class="btn btn-danger btn-sm">Quitar encargo</button>
+                                                    </form>
+                                                </td>
+                                            </tr>
                                         </c:forEach>
-                                        <c:if test="${not empty resultadoEncargosDe}">
-                                            <td class="text-end">
-                                                <form action="${pageContext.request.contextPath}/administrador/cuentas-empleados/<c:out value='${resultadoEncargosDe}'/>/desencargar/<c:out value='${fila.id}'/>"
-                                                      method="POST" class="d-inline">
-                                                    <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
-                                                    <button type="submit" class="btn btn-danger btn-sm">Quitar encargo</button>
-                                                </form>
-                                            </td>
-                                        </c:if>
-                                    </tr>
-                                </c:forEach>
-                                </tbody>
+                                        </tbody>
+                                    </c:when>
+                                    <%-- Sectores asignados al empleado --%>
+                                    <c:otherwise>
+                                        <thead class="table-light">
+                                        <tr>
+                                            <th>Letra de zona</th>
+                                            <th>Cantidad de vehículos a cargo</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <c:forEach var="fila" items="${resultado}">
+                                            <tr>
+                                                <td><c:out value="${fila.zonaLetra}"/></td>
+                                                <td><c:out value="${fila.cantVehiculosACargo}"/></td>
+                                            </tr>
+                                        </c:forEach>
+                                        </tbody>
+                                    </c:otherwise>
+                                </c:choose>
                             </table>
                         </div>
                     </c:when>
@@ -250,6 +283,7 @@
                                 <th>Especialidad</th>
                                 <th>Usuario</th>
                                 <th>Teléfono</th>
+                                <th>Dirección</th>
                                 <c:if test="${modoBajas}"><th>Estado</th></c:if>
                                 <c:if test="${not modoBajas}"><th class="text-end">Acciones</th></c:if>
                             </tr>
@@ -264,6 +298,7 @@
                                     <td><span class="badge bg-primary"><c:out value="${e.especialidad}"/></span></td>
                                     <td><span class="badge rol-EMPLEADO"><c:out value="${e.nombreUsuario}"/></span></td>
                                     <td><c:out value="${empty e.telefono ? '-' : e.telefono}"/></td>
+                                    <td><c:out value="${empty e.direccion ? '-' : e.direccion}"/></td>
                                     <c:if test="${modoBajas}">
                                         <td>
                                             <c:choose>

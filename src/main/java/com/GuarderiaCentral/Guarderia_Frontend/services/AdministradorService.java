@@ -32,7 +32,7 @@ public class AdministradorService {
 
     public Object crearAdministrador(Map<String, String> formulario) {
         Map<String, Object> body = BackendClientService.armarCuerpo(formulario,
-                "nombre", "apellido", "direccion", "telefono", "nombreUsuario", "clave");
+                "nombre", "apellido", "dni", "direccion", "telefono", "nombreUsuario", "clave");
         return backendClientService.post("/usuarios/administradores", body);
     }
 
@@ -46,7 +46,7 @@ public class AdministradorService {
      */
     public Object editarAdministrador(Integer id, Map<String, String> formulario) {
         Map<String, Object> body = BackendClientService.armarCuerpo(formulario,
-                "nombre", "apellido", "direccion", "telefono", "nombreUsuario", "clave");
+                "nombre", "apellido", "dni", "direccion", "telefono", "nombreUsuario", "clave");
         return backendClientService.put("/usuarios/administradores/" + id, body);
     }
 

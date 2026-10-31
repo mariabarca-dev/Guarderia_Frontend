@@ -1,13 +1,14 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <%--
   socio.jsp - Fragmento (se incluye dentro de layout.jsp). Dos usos:
   1) PERFIL DEL SOCIO (/socio/mi-perfil y /socio/mis-cocheras): llega "datosSocio".
      En mis-cocheras llega ademas "listaCocherasOcupadas" (GarageOcupadoResponse).
   2) CUENTAS DE SOCIOS (/administrador|sysadmin/cuentas-socios): llegan "registros", "rutaBase",
      "puedeCrear", "puedeEditar", "puedeEliminar", "modoBajas" y, en ver, "registro".
-     Consultas extra del ADMINISTRADOR: "resultado" y "tituloResultado".
+     Consultas extra del ADMINISTRADOR: "resultado", "tituloResultado" y "tipoResultado" ("rodados" o "cocheras").
 --%>
 <c:choose>
 
@@ -30,7 +31,12 @@
                 </div>
                 <div class="col-md-4">
                     <label class="form-label text-muted mb-0">Fecha de ingreso</label>
-                    <p class="fw-bold mb-0"><c:out value="${empty datosSocio.fechaIngreso ? '-' : datosSocio.fechaIngreso}"/></p>
+                    <p class="fw-bold mb-0">
+                        <c:choose>
+                            <c:when test="${empty datosSocio.fechaIngreso}">-</c:when>
+                            <c:otherwise><fmt:parseDate value="${datosSocio.fechaIngreso}" pattern="yyyy-MM-dd" var="fechaPerfil"/><fmt:formatDate value="${fechaPerfil}" pattern="dd/MM/yyyy"/></c:otherwise>
+                        </c:choose>
+                    </p>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label text-muted mb-0">Dirección</label>
@@ -44,7 +50,7 @@
         </div>
     </div>
 
-    <%-- Garages que ocupa el socio (GarageOcupadoResponse). Solo llega en /socio/mis-cocheras. --%>
+    <%-- Cocheras que ocupa el socio (GarageOcupadoResponse). Solo llega en /socio/mis-cocheras. --%>
     <c:if test="${listaCocherasOcupadas != null}">
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-dark text-white fw-bold">Mis cocheras ocupadas</div>
@@ -55,17 +61,24 @@
                             <table class="table table-hover table-striped mb-0 align-middle">
                                 <thead class="table-light">
                                 <tr>
-                                    <c:forEach var="col" items="${listaCocherasOcupadas[0]}">
-                                        <th><c:out value="${col.key}"/></th>
-                                    </c:forEach>
+                                    <th>Matrícula</th>
+                                    <th>Nº de cochera</th>
+                                    <th>Zona</th>
+                                    <th>Fecha de asignación de la cochera</th>
                                 </tr>
                                 </thead>
                                 <tbody>
                                 <c:forEach var="fila" items="${listaCocherasOcupadas}">
                                     <tr>
-                                        <c:forEach var="celda" items="${fila}">
-                                            <td><c:out value="${celda.value}"/></td>
-                                        </c:forEach>
+                                        <td><c:out value="${fila.vehiculoMatricula}"/></td>
+                                        <td><c:out value="${fila.garage.numeroGarage}"/></td>
+                                        <td><c:out value="${fila.garage.zonaLetra}"/></td>
+                                        <td>
+                                            <c:choose>
+                                                <c:when test="${empty fila.fechaAsignacionGarage}">-</c:when>
+                                                <c:otherwise><fmt:parseDate value="${fila.fechaAsignacionGarage}" pattern="yyyy-MM-dd" var="fechaAsig"/><fmt:formatDate value="${fechaAsig}" pattern="dd/MM/yyyy"/></c:otherwise>
+                                            </c:choose>
+                                        </td>
                                     </tr>
                                 </c:forEach>
                                 </tbody>
@@ -189,7 +202,7 @@
         </div>
     </c:if>
 
-    <%-- RESULTADO DE UNA CONSULTA EXTRA (rodados o cocheras de un socio) --%>
+    <%-- RESULTADO DE UNA CONSULTA EXTRA (rodados o cocheras de un socio; tipoResultado dice cuál) --%>
     <c:if test="${resultado != null}">
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-secondary text-white fw-bold d-flex justify-content-between align-items-center">
@@ -201,22 +214,61 @@
                     <c:when test="${not empty resultado}">
                         <div class="table-responsive">
                             <table class="table table-hover table-striped mb-0 align-middle">
-                                <thead class="table-light">
-                                <tr>
-                                    <c:forEach var="col" items="${resultado[0]}">
-                                        <th><c:out value="${col.key}"/></th>
-                                    </c:forEach>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                <c:forEach var="fila" items="${resultado}">
-                                    <tr>
-                                        <c:forEach var="celda" items="${fila}">
-                                            <td><c:out value="${celda.value}"/></td>
+                                <c:choose>
+                                    <%-- Rodados del socio: el socio va en el título, no se repite en cada fila --%>
+                                    <c:when test="${tipoResultado == 'rodados'}">
+                                        <thead class="table-light">
+                                        <tr>
+                                            <th>Nombre</th>
+                                            <th>Matrícula</th>
+                                            <th>Tipo</th>
+                                            <th>Profundidad (m)</th>
+                                            <th>Ancho (m)</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <c:forEach var="fila" items="${resultado}">
+                                            <tr>
+                                                <td><c:out value="${fila.nombre}"/></td>
+                                                <td><c:out value="${fila.matricula}"/></td>
+                                                <td>
+                                                    <c:choose>
+                                                        <c:when test="${fila.tipo == 'MOTORHOME'}">Motorhome</c:when>
+                                                        <c:when test="${fila.tipo == 'CASA_RODANTE_DE_ARRASTRE'}">Casa rodante de arrastre</c:when>
+                                                        <c:when test="${fila.tipo == 'CARAVANA'}">Caravana</c:when>
+                                                        <c:when test="${fila.tipo == 'TRAILER'}">Trailer</c:when>
+                                                        <c:otherwise><c:out value="${fila.tipo}"/></c:otherwise>
+                                                    </c:choose>
+                                                </td>
+                                                <td><fmt:formatNumber value="${fila.profundidad}" maxFractionDigits="2"/></td>
+                                                <td><fmt:formatNumber value="${fila.ancho}" maxFractionDigits="2"/></td>
+                                            </tr>
                                         </c:forEach>
-                                    </tr>
-                                </c:forEach>
-                                </tbody>
+                                        </tbody>
+                                    </c:when>
+                                    <%-- Cocheras compradas por el socio --%>
+                                    <c:otherwise>
+                                        <thead class="table-light">
+                                        <tr>
+                                            <th>Nº de cochera</th>
+                                            <th>Fecha de compra de la cochera</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <c:forEach var="fila" items="${resultado}">
+                                            <tr>
+                                                <td><c:out value="${fila.garageNumero}"/></td>
+                                                <td>
+                                                    <c:choose>
+                                                        <c:when test="${empty fila.fechaCompraGarage}">-</c:when>
+                                                        <c:otherwise><fmt:parseDate value="${fila.fechaCompraGarage}" pattern="yyyy-MM-dd" var="fechaCompra"/><fmt:formatDate value="${fechaCompra}" pattern="dd/MM/yyyy"/></c:otherwise>
+                                                    </c:choose>
+                                                </td>
+                                            </tr>
+                                        </c:forEach>
+                                        </tbody>
+                                    </c:otherwise>
+                                </c:choose>
                             </table>
                         </div>
                     </c:when>
@@ -263,6 +315,7 @@
                                 <th>DNI</th>
                                 <th>Usuario</th>
                                 <th>Teléfono</th>
+                                <th>Dirección</th>
                                 <th>Ingreso</th>
                                 <c:if test="${modoBajas}"><th>Estado</th></c:if>
                                 <c:if test="${not modoBajas}"><th class="text-end">Acciones</th></c:if>
@@ -277,7 +330,13 @@
                                     <td><c:out value="${s.dni}"/></td>
                                     <td><span class="badge rol-SOCIO"><c:out value="${s.nombreUsuario}"/></span></td>
                                     <td><c:out value="${empty s.telefono ? '-' : s.telefono}"/></td>
-                                    <td><c:out value="${empty s.fechaIngreso ? '-' : s.fechaIngreso}"/></td>
+                                    <td><c:out value="${empty s.direccion ? '-' : s.direccion}"/></td>
+                                    <td>
+                                        <c:choose>
+                                            <c:when test="${empty s.fechaIngreso}">-</c:when>
+                                            <c:otherwise><fmt:parseDate value="${s.fechaIngreso}" pattern="yyyy-MM-dd" var="fechaIng"/><fmt:formatDate value="${fechaIng}" pattern="dd/MM/yyyy"/></c:otherwise>
+                                        </c:choose>
+                                    </td>
                                     <c:if test="${modoBajas}">
                                         <td>
                                             <c:choose>

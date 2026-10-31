@@ -49,8 +49,14 @@ public class SocioService {
         return backendClientService.get("/usuarios/socios/inactivos");
     }
 
-    public Object obtenerSocioPorId(Integer id) {
-        return backendClientService.get("/usuarios/socios/" + id);
+    /**
+     * Obtiene un socio por su id.
+     *
+     * @param id id interno del socio
+     * @return datos del socio (el controller los usa, por ejemplo, para armar títulos con nombre y DNI)
+     */
+    public Map<String, Object> obtenerSocioPorId(Integer id) {
+        return backendClientService.getMapa("/usuarios/socios/" + id);
     }
 
     public Object buscarSocioPorDni(String dni) {

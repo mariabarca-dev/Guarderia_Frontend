@@ -32,6 +32,11 @@
                            value="<c:out value='${registro.apellido}'/>">
                 </div>
                 <div class="col-md-4">
+                    <label for="dni" class="form-label">DNI (opcional)</label>
+                    <input type="text" class="form-control" id="dni" name="dni" maxlength="15"
+                           value="<c:out value='${registro.dni}'/>">
+                </div>
+                <div class="col-md-4">
                     <label for="nombreUsuario" class="form-label">Nombre de Usuario</label>
                     <input type="text" class="form-control" id="nombreUsuario" name="nombreUsuario" maxlength="50" required
                            value="<c:out value='${registro.nombreUsuario}'/>">
@@ -116,6 +121,7 @@
                         <tr>
                             <th>ID</th>
                             <th>Nombre y Apellido</th>
+                            <th>DNI</th>
                             <th>Usuario</th>
                             <th>Teléfono</th>
                             <th>Dirección</th>
@@ -129,6 +135,7 @@
                             <tr>
                                 <td><c:out value="${a.id}"/></td>
                                 <td><strong><c:out value="${a.nombre}"/> <c:out value="${a.apellido}"/></strong></td>
+                                <td><c:out value="${empty a.dni ? '-' : a.dni}"/></td>
                                 <td>
                                     <c:choose>
                                         <c:when test="${a.rol eq 'SYSADMIN' or a.nombreUsuario eq 'sysadmin'}">

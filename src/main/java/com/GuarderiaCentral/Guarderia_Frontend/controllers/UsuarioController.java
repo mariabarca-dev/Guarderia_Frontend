@@ -34,8 +34,34 @@ public class UsuarioController {
 
     // ------------------------------------------------------------------ CONSULTAS EXTRA DE SOCIOS (ADMINISTRADOR)
 
-    /** Carga socio.jsp con la lista de socios y, opcionalmente, un registro o el resultado de una consulta. */
-    private String vistaCuentasSocios(Model model, Object registro, Object resultado, String tituloResultado) {
+    /**
+     * Arma el texto que identifica a un socio en los títulos, por ejemplo "Martín Gómez (DNI 40200001)".
+     *
+     * @param socio datos del socio devueltos por el back
+     * @return nombre, apellido y DNI del socio
+     */
+    private String describirSocio(Map<String, Object> socio) {
+        return socio.get("nombre") + " " + socio.get("apellido") + " (DNI " + socio.get("dni") + ")";
+    }
+
+    /**
+     * Arma el texto que identifica a un empleado en los títulos, por ejemplo "Ana Torres (EMD001)".
+     * El código se lee de "codigo" o de "codigoEmpleado", el que traiga la respuesta del back.
+     *
+     * @param empleado datos del empleado devueltos por el back
+     * @return nombre, apellido y código del empleado
+     */
+    private String describirEmpleado(Map<String, Object> empleado) {
+        Object codigo = empleado.get("codigo") != null ? empleado.get("codigo") : empleado.get("codigoEmpleado");
+        return empleado.get("nombre") + " " + empleado.get("apellido") + " (" + codigo + ")";
+    }
+
+    /**
+     * Carga socio.jsp con la lista de socios y, opcionalmente, un registro o el resultado de una consulta.
+     *
+     * @param tipoResultado "rodados" o "cocheras": indica a la vista qué columnas dibujar en el resultado
+     */
+    private String vistaCuentasSocios(Model model, Object registro, Object resultado, String tituloResultado, String tipoResultado) {
         model.addAttribute("registros", socioService.listarSocios());
         if (registro != null) {
             model.addAttribute("registro", registro);
@@ -43,6 +69,7 @@ public class UsuarioController {
         if (resultado != null) {
             model.addAttribute("resultado", resultado);
             model.addAttribute("tituloResultado", tituloResultado);
+            model.addAttribute("tipoResultado", tipoResultado);
         }
         model.addAttribute("rutaBase", "/administrador/cuentas-socios");
         model.addAttribute("puedeCrear", true);
@@ -55,17 +82,19 @@ public class UsuarioController {
 
     @GetMapping("/administrador/cuentas-socios/{id}/sus-rodados")
     public String susRodados(@PathVariable Integer id, Model model) {
-        return vistaCuentasSocios(model, null, socioService.obtenerVehiculosDeSocio(id), "Rodados del socio " + id);
+        String titulo = "Rodados de " + describirSocio(socioService.obtenerSocioPorId(id));
+        return vistaCuentasSocios(model, null, socioService.obtenerVehiculosDeSocio(id), titulo, "rodados");
     }
 
     @GetMapping("/administrador/cuentas-socios/{id}/sus-cocheras")
     public String susCocheras(@PathVariable Integer id, Model model) {
-        return vistaCuentasSocios(model, null, socioService.obtenerGaragesDeSocio(id), "Cocheras del socio " + id);
+        String titulo = "Cocheras de " + describirSocio(socioService.obtenerSocioPorId(id));
+        return vistaCuentasSocios(model, null, socioService.obtenerGaragesDeSocio(id), titulo, "cocheras");
     }
 
     @GetMapping("/administrador/cuentas-socios/buscar-documento/{dni}")
     public String buscarDocumento(@PathVariable String dni, Model model) {
-        return vistaCuentasSocios(model, socioService.buscarSocioPorDni(dni), null, null);
+        return vistaCuentasSocios(model, socioService.buscarSocioPorDni(dni), null, null, null);
     }
 
     /** RUTA EXTRA: un formulario GET no puede armar "/buscar-documento/{dni}", así que recibe ?dni= y redirige a la ruta del prompt. */
@@ -76,11 +105,17 @@ public class UsuarioController {
 
     // ------------------------------------------------------------------ CONSULTAS EXTRA DE EMPLEADOS (ADMINISTRADOR)
 
-    /** Carga empleado.jsp con la lista de empleados y el resultado de una consulta. */
-    private String vistaCuentasEmpleados(Model model, Object resultado, String tituloResultado, Integer encargosDe) {
+    /**
+     * Carga empleado.jsp con la lista de empleados y el resultado de una consulta.
+     *
+     * @param tipoResultado "sectores" o "encargos": indica a la vista qué columnas dibujar en el resultado
+     * @param encargosDe    id del empleado cuando el resultado son sus encargos (habilita encargar / quitar encargo)
+     */
+    private String vistaCuentasEmpleados(Model model, Object resultado, String tituloResultado, String tipoResultado, Integer encargosDe) {
         model.addAttribute("registros", empleadoService.listarEmpleados());
         model.addAttribute("resultado", resultado);
         model.addAttribute("tituloResultado", tituloResultado);
+        model.addAttribute("tipoResultado", tipoResultado);
         if (encargosDe != null) {
             model.addAttribute("resultadoEncargosDe", encargosDe);
         }
@@ -95,12 +130,14 @@ public class UsuarioController {
 
     @GetMapping("/administrador/cuentas-empleados/{id}/sus-sectores")
     public String susSectores(@PathVariable Integer id, Model model) {
-        return vistaCuentasEmpleados(model, empleadoService.obtenerSectoresDeEmpleado(id), "Sectores del empleado " + id, null);
+        String titulo = "Sectores de " + describirEmpleado(empleadoService.obtenerEmpleadoPorId(id));
+        return vistaCuentasEmpleados(model, empleadoService.obtenerSectoresDeEmpleado(id), titulo, "sectores", null);
     }
 
     @GetMapping("/administrador/cuentas-empleados/{id}/sus-encargos")
     public String susEncargos(@PathVariable Integer id, Model model) {
-        return vistaCuentasEmpleados(model, empleadoService.obtenerEncargosDeEmpleado(id), "Vehículos a cargo del empleado " + id, id);
+        String titulo = "Vehículos a cargo de " + describirEmpleado(empleadoService.obtenerEmpleadoPorId(id));
+        return vistaCuentasEmpleados(model, empleadoService.obtenerEncargosDeEmpleado(id), titulo, "encargos", id);
     }
 
     @PostMapping("/administrador/cuentas-empleados/{id}/encargar/{vehiculoId}")
@@ -110,10 +147,15 @@ public class UsuarioController {
         return "redirect:/administrador/cuentas-empleados/" + id + "/sus-encargos";
     }
 
-    /** RUTA EXTRA: el formulario envía vehiculoId como campo (no puede armar la ruta con {vehiculoId}); hace lo mismo que la anterior. */
+    /**
+     * RUTA EXTRA: el formulario envía la matrícula escrita por el administrador (no puede armar la ruta con {vehiculoId}).
+     * El service consulta al back el vehículo por esa matrícula y encarga el vehículo encontrado.
+     */
     @PostMapping("/administrador/cuentas-empleados/{id}/encargar")
-    public String encargarDesdeFormulario(@PathVariable Integer id, @RequestParam Integer vehiculoId, RedirectAttributes redirect) {
-        return encargar(id, vehiculoId, redirect);
+    public String encargarDesdeFormulario(@PathVariable Integer id, @RequestParam String matricula, RedirectAttributes redirect) {
+        empleadoService.encargarVehiculoPorMatricula(id, matricula);
+        redirect.addFlashAttribute("mensajeExito", "Vehículo encargado exitosamente.");
+        return "redirect:/administrador/cuentas-empleados/" + id + "/sus-encargos";
     }
 
     @PostMapping("/administrador/cuentas-empleados/{id}/desencargar/{vehiculoId}")
@@ -147,11 +189,13 @@ public class UsuarioController {
     @GetMapping("/socio/mis-vehiculos")
     public String misVehiculosSocio(Model model) {
         model.addAttribute("titulo", "Mis Vehículos Registrados");
-        model.addAttribute("registros", socioService.obtenerMisVehiculos());
+        model.addAttribute("base", "/socio/mis-vehiculos");
+        model.addAttribute("lista", socioService.obtenerMisVehiculos());
+        model.addAttribute("esBajas", false);
+        model.addAttribute("puedeVer", true);
         model.addAttribute("puedeCrear", false);
         model.addAttribute("puedeEditar", false);
         model.addAttribute("puedeEliminar", false);
-        model.addAttribute("modoBajas", false);
         model.addAttribute("vista", "vehiculo");
         return "layout";
     }
@@ -159,7 +203,11 @@ public class UsuarioController {
     @GetMapping("/socio/mis-vehiculos/ver/{id}")
     public String miVehiculoDetalleSocio(@PathVariable Integer id, Model model) {
         model.addAttribute("titulo", "Detalle de Vehículo");
+        model.addAttribute("base", "/socio/mis-vehiculos");
+        model.addAttribute("lista", socioService.obtenerMisVehiculos());
         model.addAttribute("registro", socioService.obtenerMiVehiculoDetalle(id));
+        model.addAttribute("esBajas", false);
+        model.addAttribute("puedeVer", true);
         model.addAttribute("puedeCrear", false);
         model.addAttribute("puedeEditar", false);
         model.addAttribute("puedeEliminar", false);
@@ -180,12 +228,14 @@ public class UsuarioController {
 
     @GetMapping("/socio/mis-compras")
     public String misComprasSocio(Model model) {
-        model.addAttribute("titulo", "Mis Compras de Garages");
-        model.addAttribute("registros", socioService.obtenerMisComprasProperties());
+        model.addAttribute("titulo", "Mis Compras de Cocheras");
+        model.addAttribute("base", "/socio/mis-compras");
+        model.addAttribute("lista", socioService.obtenerMisComprasProperties());
+        model.addAttribute("esBajas", false);
+        model.addAttribute("puedeVer", false);
         model.addAttribute("puedeCrear", false);
         model.addAttribute("puedeEditar", false);
         model.addAttribute("puedeEliminar", false);
-        model.addAttribute("modoBajas", false);
         model.addAttribute("vista", "propiedad-garage");
         return "layout";
     }
@@ -205,11 +255,13 @@ public class UsuarioController {
     @GetMapping("/empleado/mis-sectores")
     public String misSectoresEmpleado(Model model) {
         model.addAttribute("titulo", "Mis Sectores y Vehículos a Cargo");
-        model.addAttribute("registros", empleadoService.obtenerMisSectores());
+        model.addAttribute("base", "/empleado/mis-sectores");
+        model.addAttribute("lista", empleadoService.obtenerMisSectores());
+        model.addAttribute("esBajas", false);
+        model.addAttribute("puedeVer", false);
         model.addAttribute("puedeCrear", false);
         model.addAttribute("puedeEditar", false);
         model.addAttribute("puedeEliminar", false);
-        model.addAttribute("modoBajas", false);
         model.addAttribute("vista", "asignacion-empleado-zona");
         return "layout";
     }
@@ -217,11 +269,13 @@ public class UsuarioController {
     @GetMapping("/empleado/mis-encargos")
     public String misEncargosEmpleado(Model model) {
         model.addAttribute("titulo", "Vehículos a Mi Cargo");
-        model.addAttribute("registros", empleadoService.obtenerMisEncargos());
+        model.addAttribute("base", "/empleado/mis-encargos");
+        model.addAttribute("lista", empleadoService.obtenerMisEncargos());
+        model.addAttribute("esBajas", false);
+        model.addAttribute("puedeVer", false);
         model.addAttribute("puedeCrear", false);
         model.addAttribute("puedeEditar", false);
         model.addAttribute("puedeEliminar", false);
-        model.addAttribute("modoBajas", false);
         model.addAttribute("vista", "vehiculo");
         return "layout";
     }
@@ -382,7 +436,7 @@ public class UsuarioController {
         model.addAttribute("rutaBase", "/" + rol + "/cuentas-administradores");
         model.addAttribute("puedeCrear", true);
         model.addAttribute("puedeEditar", true);
-        model.addAttribute("puedeEliminar", true);
+        model.addAttribute("puedeEliminar", "administrador".equals(rol));
         model.addAttribute("modoBajas", false);
         model.addAttribute("vista", "administrador");
         return "layout";
@@ -407,7 +461,7 @@ public class UsuarioController {
         model.addAttribute("rutaBase", "/" + rol + "/cuentas-administradores");
         model.addAttribute("puedeCrear", true);
         model.addAttribute("puedeEditar", true);
-        model.addAttribute("puedeEliminar", true);
+        model.addAttribute("puedeEliminar", "administrador".equals(rol));
         model.addAttribute("modoBajas", false);
         model.addAttribute("vista", "administrador");
         return "layout";

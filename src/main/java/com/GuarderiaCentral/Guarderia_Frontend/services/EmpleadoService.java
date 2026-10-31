@@ -41,8 +41,14 @@ public class EmpleadoService {
         return backendClientService.get("/usuarios/empleados/inactivos");
     }
 
-    public Object obtenerEmpleadoPorId(Integer id) {
-        return backendClientService.get("/usuarios/empleados/" + id);
+    /**
+     * Obtiene un empleado por su id.
+     *
+     * @param id id interno del empleado
+     * @return datos del empleado (el controller los usa, por ejemplo, para armar títulos con código y nombre)
+     */
+    public Map<String, Object> obtenerEmpleadoPorId(Integer id) {
+        return backendClientService.getMapa("/usuarios/empleados/" + id);
     }
 
     public Object crearEmpleado(Map<String, String> formulario) {
@@ -81,6 +87,21 @@ public class EmpleadoService {
 
     public Object encargarVehiculo(Integer empleadoId, Integer vehiculoId) {
         return backendClientService.put("/usuarios/empleados/" + empleadoId + "/vehiculos/" + vehiculoId, null);
+    }
+
+    /**
+     * Encarga un vehículo a un empleado a partir de la matrícula que escribió el administrador.
+     * Primero consulta al back el vehículo por matrícula (GET /vehiculos/matricula/{matricula}) para
+     * obtener su id interno y luego lo encarga con {@link #encargarVehiculo(Integer, Integer)}.
+     *
+     * @param empleadoId id del empleado
+     * @param matricula  matrícula del vehículo a encargar
+     * @return respuesta del back al encargar
+     */
+    public Object encargarVehiculoPorMatricula(Integer empleadoId, String matricula) {
+        Map<String, Object> vehiculo = backendClientService.getMapa("/vehiculos/matricula/" + BackendClientService.segmento(matricula.trim()));
+        Integer vehiculoId = ((Number) vehiculo.get("id")).intValue();
+        return encargarVehiculo(empleadoId, vehiculoId);
     }
 
     public Object desencargarVehiculo(Integer empleadoId, Integer vehiculoId) {
