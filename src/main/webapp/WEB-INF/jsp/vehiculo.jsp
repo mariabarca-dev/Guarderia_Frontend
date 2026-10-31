@@ -163,7 +163,7 @@
                 <input type="text" class="form-control" id="matricula" name="matricula" value="${fn:escapeXml(registro.matricula)}" required maxlength="50">
             </div>
             <div class="col-md-4">
-                <label class="form-label" for="tipo">Tipo de vehículo</label>
+                <label class="form-label" for="tipo">Tipo de rodado</label>
                 <select class="form-select" id="tipo" name="tipo" required>
                     <option value="">Elegí una opción</option>
                     <c:forEach var="t" items="MOTORHOME,CASA_RODANTE_DE_ARRASTRE,CARAVANA,TRAILER">

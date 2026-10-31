@@ -163,11 +163,11 @@
                           method="POST" class="row g-2 align-items-end">
                         <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
                         <div class="col-md-3">
-                            <label for="matricula" class="form-label">Matrícula del vehículo a encargar</label>
+                            <label for="matricula" class="form-label">Matrícula del rodado a encargar</label>
                             <input type="text" class="form-control" id="matricula" name="matricula" maxlength="50" required>
                         </div>
                         <div class="col-auto">
-                            <button type="submit" class="btn btn-primary">Encargar vehículo</button>
+                            <button type="submit" class="btn btn-primary">Encargar rodado</button>
                         </div>
                     </form>
                 </div>
@@ -223,7 +223,7 @@
                                         <thead class="table-light">
                                         <tr>
                                             <th>Letra de zona</th>
-                                            <th>Cantidad de vehículos a cargo</th>
+                                            <th>Cantidad de rodados a cargo</th>
                                         </tr>
                                         </thead>
                                         <tbody>

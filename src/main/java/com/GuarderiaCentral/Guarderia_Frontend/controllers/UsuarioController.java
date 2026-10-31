@@ -136,14 +136,14 @@ public class UsuarioController {
 
     @GetMapping("/administrador/cuentas-empleados/{id}/sus-encargos")
     public String susEncargos(@PathVariable Integer id, Model model) {
-        String titulo = "Vehículos a cargo de " + describirEmpleado(empleadoService.obtenerEmpleadoPorId(id));
+        String titulo = "Rodados a cargo de " + describirEmpleado(empleadoService.obtenerEmpleadoPorId(id));
         return vistaCuentasEmpleados(model, empleadoService.obtenerEncargosDeEmpleado(id), titulo, "encargos", id);
     }
 
     @PostMapping("/administrador/cuentas-empleados/{id}/encargar/{vehiculoId}")
     public String encargar(@PathVariable Integer id, @PathVariable Integer vehiculoId, RedirectAttributes redirect) {
         empleadoService.encargarVehiculo(id, vehiculoId);
-        redirect.addFlashAttribute("mensajeExito", "Vehículo encargado exitosamente.");
+        redirect.addFlashAttribute("mensajeExito", "Rodado encargado exitosamente.");
         return "redirect:/administrador/cuentas-empleados/" + id + "/sus-encargos";
     }
 
@@ -154,14 +154,14 @@ public class UsuarioController {
     @PostMapping("/administrador/cuentas-empleados/{id}/encargar")
     public String encargarDesdeFormulario(@PathVariable Integer id, @RequestParam String matricula, RedirectAttributes redirect) {
         empleadoService.encargarVehiculoPorMatricula(id, matricula);
-        redirect.addFlashAttribute("mensajeExito", "Vehículo encargado exitosamente.");
+        redirect.addFlashAttribute("mensajeExito", "Rodado encargado exitosamente.");
         return "redirect:/administrador/cuentas-empleados/" + id + "/sus-encargos";
     }
 
     @PostMapping("/administrador/cuentas-empleados/{id}/desencargar/{vehiculoId}")
     public String desencargar(@PathVariable Integer id, @PathVariable Integer vehiculoId, RedirectAttributes redirect) {
         empleadoService.desencargarVehiculo(id, vehiculoId);
-        redirect.addFlashAttribute("mensajeExito", "Vehículo desencargado exitosamente.");
+        redirect.addFlashAttribute("mensajeExito", "Rodado desencargado exitosamente.");
         return "redirect:/administrador/cuentas-empleados/" + id + "/sus-encargos";
     }
 
@@ -254,7 +254,7 @@ public class UsuarioController {
 
     @GetMapping("/empleado/mis-sectores")
     public String misSectoresEmpleado(Model model) {
-        model.addAttribute("titulo", "Mis Sectores y Vehículos a Cargo");
+        model.addAttribute("titulo", "Mis Sectores y Rodados a Cargo");
         model.addAttribute("base", "/empleado/mis-sectores");
         model.addAttribute("lista", empleadoService.obtenerMisSectores());
         model.addAttribute("esBajas", false);
@@ -268,7 +268,7 @@ public class UsuarioController {
 
     @GetMapping("/empleado/mis-encargos")
     public String misEncargosEmpleado(Model model) {
-        model.addAttribute("titulo", "Vehículos a Mi Cargo");
+        model.addAttribute("titulo", "Rodados a Mi Cargo");
         model.addAttribute("base", "/empleado/mis-encargos");
         model.addAttribute("lista", empleadoService.obtenerMisEncargos());
         model.addAttribute("esBajas", false);
@@ -436,7 +436,7 @@ public class UsuarioController {
         model.addAttribute("rutaBase", "/" + rol + "/cuentas-administradores");
         model.addAttribute("puedeCrear", true);
         model.addAttribute("puedeEditar", true);
-        model.addAttribute("puedeEliminar", "administrador".equals(rol));
+        model.addAttribute("puedeEliminar", true);
         model.addAttribute("modoBajas", false);
         model.addAttribute("vista", "administrador");
         return "layout";
@@ -461,7 +461,7 @@ public class UsuarioController {
         model.addAttribute("rutaBase", "/" + rol + "/cuentas-administradores");
         model.addAttribute("puedeCrear", true);
         model.addAttribute("puedeEditar", true);
-        model.addAttribute("puedeEliminar", "administrador".equals(rol));
+        model.addAttribute("puedeEliminar", true);
         model.addAttribute("modoBajas", false);
         model.addAttribute("vista", "administrador");
         return "layout";

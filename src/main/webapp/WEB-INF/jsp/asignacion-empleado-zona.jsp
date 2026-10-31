@@ -51,7 +51,7 @@
                     <c:if test="${puedeConsultar}"><th>Nombre del empleado</th></c:if>
                     <c:if test="${puedeConsultar}"><th>Apellido del empleado</th></c:if>
                     <th>Letra de zona</th>
-                    <th>Vehículos a cargo</th>
+                    <th>Rodados a cargo</th>
                     <c:if test="${esBajas}"><th>Estado</th></c:if>
                     <c:if test="${not esBajas and (puedeVer or puedeEliminar)}"><th class="text-end">Acciones</th></c:if>
                     </tr>
@@ -123,7 +123,7 @@
                 <input type="text" class="form-control" id="zonaLetra" name="zonaLetra" value="${fn:escapeXml(registro.zonaLetra)}" required maxlength="10">
             </div>
             <div class="col-md-4">
-                <label class="form-label" for="cantVehiculosACargo">Vehículos a cargo</label>
+                <label class="form-label" for="cantVehiculosACargo">Rodados a cargo</label>
                 <input type="number" class="form-control" id="cantVehiculosACargo" name="cantVehiculosACargo" value="${fn:escapeXml(registro.cantVehiculosACargo)}" required min="0">
             </div>
                 <div class="col-12">

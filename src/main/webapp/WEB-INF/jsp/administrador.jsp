@@ -161,7 +161,8 @@
                                         <c:if test="${not empty rutaBase}">
                                             <a href="${pageContext.request.contextPath}${rutaBase}/ver/${a.id}" class="btn btn-warning btn-sm">Editar</a>
                                         </c:if>
-                                        <c:if test="${puedeEliminar}">
+                                        <%-- La cuenta SYSADMIN nunca se da de baja: el botón no aparece en su fila --%>
+                                        <c:if test="${puedeEliminar and a.rol ne 'SYSADMIN' and a.nombreUsuario ne 'sysadmin'}">
                                             <form action="${pageContext.request.contextPath}${rutaBase}/eliminar" method="POST" class="d-inline">
                                                 <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
                                                 <input type="hidden" name="id" value="<c:out value='${a.id}'/>"/>

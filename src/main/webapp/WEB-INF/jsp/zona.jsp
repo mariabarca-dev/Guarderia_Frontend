@@ -45,8 +45,8 @@
                     <tr>
                     <th>ID</th>
                     <th>Letra</th>
-                    <th>Tipo de vehículo</th>
-                    <th>Capacidad</th>
+                    <th>Tipo de rodado</th>
+                    <th>Capacidad (rodados)</th>
                     <th>Ancho (m)</th>
                     <th>Largo (m)</th>
                     <th>Ocupados</th>
@@ -120,7 +120,7 @@
                 <input type="text" class="form-control" id="letra" name="letra" value="${fn:escapeXml(registro.letra)}" required maxlength="10">
             </div>
             <div class="col-md-4">
-                <label class="form-label" for="tipoVehiculo">Tipo de vehículo</label>
+                <label class="form-label" for="tipoVehiculo">Tipo de rodado</label>
                 <select class="form-select" id="tipoVehiculo" name="tipoVehiculo" required>
                     <option value="">Elegí una opción</option>
                     <c:forEach var="t" items="MOTORHOME,CASA_RODANTE_DE_ARRASTRE,CARAVANA,TRAILER">
@@ -129,7 +129,7 @@
                 </select>
             </div>
             <div class="col-md-4">
-                <label class="form-label" for="capacidadVehiculos">Capacidad (vehículos)</label>
+                <label class="form-label" for="capacidadVehiculos">Capacidad (rodados)</label>
                 <input type="number" class="form-control" id="capacidadVehiculos" name="capacidadVehiculos" value="${fn:escapeXml(registro.capacidadVehiculos)}" required min="1">
             </div>
             <div class="col-md-4">
