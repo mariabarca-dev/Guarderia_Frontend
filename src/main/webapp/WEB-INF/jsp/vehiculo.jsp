@@ -11,6 +11,7 @@
   Model que arma el controller:
     titulo, base (ruta web de la tabla), lista (List<Map>), registro (Map a ver/editar, puede ser null),
     esBajas (muestra Estado y oculta acciones), puedeVer, puedeCrear, puedeEditar, puedeEliminar,
+    mostrarUbicacion (opcional: agrega las columnas Letra de zona y Nº de cochera; lo usa "Mis encargos" del EMPLEADO),
     puedeConsultar (muestra la tarjeta de consultas; solo ADMINISTRADOR). Cuando es false (SOCIO / EMPLEADO)
     la tabla oculta las columnas ID y Socio (ID), que no les aportan nada.
 --%>
@@ -34,8 +35,8 @@
             </form>
             <form action="${fn:escapeXml(raiz)}/buscar-categoria" method="get" class="row g-2 align-items-end mt-2">
                 <div class="col-sm-6 col-md-4">
-                    <label class="form-label">Buscar por categoría</label>
-                    <select class="form-select" name="categoria" required><option value="">Elegí una categoría</option><c:forEach var="t" items="MOTORHOME,CASA_RODANTE_DE_ARRASTRE,CARAVANA,TRAILER"><option value="${fn:escapeXml(t)}"><c:out value="${fn:replace(t, '_', ' ')}"/></option></c:forEach></select>
+                    <label class="form-label">Buscar por tipo de rodado</label>
+                    <select class="form-select" name="categoria" required><option value="">Elegí un tipo de rodado</option><c:forEach var="t" items="MOTORHOME,CASA_RODANTE_DE_ARRASTRE,CARAVANA,TRAILER"><option value="${fn:escapeXml(t)}"><c:out value="${fn:replace(t, '_', ' ')}"/></option></c:forEach></select>
                 </div>
                 <div class="col-auto"><button type="submit" class="btn btn-primary">Buscar</button></div>
             </form>
@@ -65,6 +66,8 @@
                     <th>Tipo</th>
                     <th>Profundidad (m)</th>
                     <th>Ancho (m)</th>
+                    <c:if test="${mostrarUbicacion}"><th>Letra de zona</th></c:if>
+                    <c:if test="${mostrarUbicacion}"><th>Nº de cochera</th></c:if>
                     <c:if test="${puedeConsultar}"><th>DNI del socio</th></c:if>
                     <c:if test="${puedeConsultar}"><th>Nombre del socio</th></c:if>
                     <c:if test="${puedeConsultar}"><th>Apellido del socio</th></c:if>
@@ -81,6 +84,8 @@
                     <td><span class="badge bg-info text-dark"><c:out value="${fn:replace(r.tipo, '_', ' ')}"/></span></td>
                     <td><fmt:formatNumber value="${r.profundidad}" maxFractionDigits="2"/></td>
                     <td><fmt:formatNumber value="${r.ancho}" maxFractionDigits="2"/></td>
+                    <c:if test="${mostrarUbicacion}"><td><c:out value="${empty r.zonaLetra ? '-' : r.zonaLetra}"/></td></c:if>
+                    <c:if test="${mostrarUbicacion}"><td><c:out value="${empty r.garageNumero ? '-' : r.garageNumero}"/></td></c:if>
                     <c:if test="${puedeConsultar}"><td><c:out value="${r.socioDni}"/></td></c:if>
                     <c:if test="${puedeConsultar}"><td><c:out value="${r.socioNombre}"/></td></c:if>
                     <c:if test="${puedeConsultar}"><td><c:out value="${r.socioApellido}"/></td></c:if>

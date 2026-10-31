@@ -84,6 +84,7 @@
                     <c:if test="${puedeConsultar}"><th>Apellido del socio</th></c:if>
                     <th>Nº de cochera</th>
                     <th>Fecha de compra</th>
+                    <c:if test="${not puedeConsultar}"><th>Ocupación</th></c:if>
                     <c:if test="${esBajas}"><th>Estado</th></c:if>
                     <c:if test="${not esBajas and (puedeVer or puedeEliminar)}"><th class="text-end">Acciones</th></c:if>
                     </tr>
@@ -97,6 +98,15 @@
                     <c:if test="${puedeConsultar}"><td><c:out value="${r.socioApellido}"/></td></c:if>
                     <td><c:out value="${r.garageNumero}"/></td>
                     <td><fmt:parseDate value="${r.fechaCompraGarage}" pattern="yyyy-MM-dd" var="fecha"/><fmt:formatDate value="${fecha}" pattern="dd/MM/yyyy"/></td>
+                    <c:if test="${not puedeConsultar}">
+                        <td>
+                            <c:choose>
+                                <c:when test="${empty r.ocupadaPorMatricula}"><span class="badge bg-success">Libre</span></c:when>
+                                <c:when test="${r.ocupadaPorPropio}">Ocupada por tu rodado <strong><c:out value="${r.ocupadaPorMatricula}"/></strong></c:when>
+                                <c:otherwise>Ocupada por el rodado <strong><c:out value="${r.ocupadaPorMatricula}"/></strong> de otro socio</c:otherwise>
+                            </c:choose>
+                        </td>
+                    </c:if>
                     <c:if test="${esBajas}">
                         <td>
                             <c:choose>

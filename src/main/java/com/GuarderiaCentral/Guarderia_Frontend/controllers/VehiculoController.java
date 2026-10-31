@@ -99,7 +99,7 @@ public class VehiculoController {
     }
 
     /**
-     * Vehículos de una categoría (tipo de vehículo).
+     * Vehículos de un tipo de rodado (categoría).
      *
      * @param tipo valor de TipoVehiculo
      * @param model modelo de la vista
@@ -107,7 +107,7 @@ public class VehiculoController {
      */
     @GetMapping(BASE + "/buscar-categoria/{tipo}")
     public String buscarCategoria(@PathVariable String tipo, Model model) {
-        return mostrar(model, "Rodados de la categoría " + tipo.replace('_', ' '),
+        return mostrar(model, "Rodados del tipo " + tipo.replace('_', ' '),
                 vehiculoService.listarPorTipo(tipo), null, false);
     }
 

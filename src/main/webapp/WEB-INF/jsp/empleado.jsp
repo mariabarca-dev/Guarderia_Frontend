@@ -188,6 +188,8 @@
                                             <th>Tipo</th>
                                             <th>Profundidad (m)</th>
                                             <th>Ancho (m)</th>
+                                            <th>Letra de zona</th>
+                                            <th>Nº de cochera</th>
                                             <th class="text-end">Acción</th>
                                         </tr>
                                         </thead>
@@ -207,6 +209,8 @@
                                                 </td>
                                                 <td><fmt:formatNumber value="${fila.profundidad}" maxFractionDigits="2"/></td>
                                                 <td><fmt:formatNumber value="${fila.ancho}" maxFractionDigits="2"/></td>
+                                                <td><c:out value="${empty fila.zonaLetra ? '-' : fila.zonaLetra}"/></td>
+                                                <td><c:out value="${empty fila.garageNumero ? '-' : fila.garageNumero}"/></td>
                                                 <td class="text-end">
                                                     <form action="${pageContext.request.contextPath}/administrador/cuentas-empleados/<c:out value='${resultadoEncargosDe}'/>/desencargar/<c:out value='${fila.id}'/>"
                                                           method="POST" class="d-inline">

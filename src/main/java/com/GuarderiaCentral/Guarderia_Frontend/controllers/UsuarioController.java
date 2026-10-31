@@ -270,6 +270,7 @@ public class UsuarioController {
     public String misEncargosEmpleado(Model model) {
         model.addAttribute("titulo", "Rodados a Mi Cargo");
         model.addAttribute("base", "/empleado/mis-encargos");
+        model.addAttribute("mostrarUbicacion", true);
         model.addAttribute("lista", empleadoService.obtenerMisEncargos());
         model.addAttribute("esBajas", false);
         model.addAttribute("puedeVer", false);
