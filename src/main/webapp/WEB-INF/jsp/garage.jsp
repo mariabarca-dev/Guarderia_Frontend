@@ -11,7 +11,6 @@
     titulo, base (ruta web de la tabla), lista (List<Map>), registro (Map a ver/editar, puede ser null),
     esBajas (muestra Estado y oculta acciones), puedeVer, puedeCrear, puedeEditar, puedeEliminar,
     puedeConsultar (muestra la tarjeta de consultas; solo ADMINISTRADOR).
-    ocupacion (opcional): List<ZonaResponse> de GET /garages/disponibilidad (espacios por zona).
 --%>
 <c:set var="raiz" value="${pageContext.request.contextPath}${base}"/>
 <c:set var="editando" value="${not empty registro and puedeEditar}"/>
@@ -23,35 +22,8 @@
             <div class="d-flex flex-wrap gap-2">
             <a class="btn btn-outline-dark btn-sm" href="${fn:escapeXml(raiz)}">Listado</a>
             <a class="btn btn-outline-dark btn-sm" href="${fn:escapeXml(raiz)}/bajas">Activas y dadas de baja</a>
-            <a class="btn btn-outline-dark btn-sm" href="${fn:escapeXml(raiz)}/ocupacion">Ocupación por zona</a>
             </div>
 
-        </div>
-    </div>
-</c:if>
-
-<c:if test="${not empty ocupacion}">
-    <div class="card shadow-sm mb-4">
-        <div class="card-header bg-secondary text-white fw-bold">Ocupación por zona</div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-            <table class="table table-striped mb-0 align-middle">
-                <thead class="table-light">
-                <tr><th>Zona</th><th>Tipo de vehículo</th><th>Capacidad</th><th>Ocupados</th><th>Disponibles</th></tr>
-                </thead>
-                <tbody>
-                <c:forEach var="z" items="${ocupacion}">
-                    <tr>
-                        <td><span class="badge bg-dark">Zona <c:out value="${z.letra}"/></span></td>
-                        <td><c:out value="${fn:replace(z.tipoVehiculo, '_', ' ')}"/></td>
-                        <td><c:out value="${z.capacidadVehiculos}"/></td>
-                        <td><c:out value="${z.espaciosOcupados}"/></td>
-                        <td><strong><c:out value="${z.espaciosDisponibles}"/></strong></td>
-                    </tr>
-                </c:forEach>
-                </tbody>
-            </table>
-            </div>
         </div>
     </div>
 </c:if>
@@ -67,9 +39,9 @@
                     <tr>
                     <th>ID</th>
                     <th>N° de cochera</th>
-                    <th>Lectura de luz</th>
+                    <th>Lectura de luz (kWh)</th>
                     <th>Mantenimiento</th>
-                    <th>Zona (ID)</th>
+                    <th>Letra de zona</th>
                     <c:if test="${esBajas}"><th>Estado</th></c:if>
                     <c:if test="${not esBajas and (puedeVer or puedeEliminar)}"><th class="text-end">Acciones</th></c:if>
                     </tr>
@@ -81,7 +53,7 @@
                     <td><c:out value="${r.numeroGarage}"/></td>
                     <td><fmt:formatNumber value="${r.lecturaLuz}" maxFractionDigits="2"/></td>
                     <td><c:out value="${r.servicioMantenimiento ? 'Sí' : 'No'}"/></td>
-                    <td><c:out value="${r.zonaId}"/></td>
+                    <td><c:out value="${r.zonaLetra}"/></td>
                     <c:if test="${esBajas}">
                         <td>
                             <c:choose>
@@ -136,7 +108,7 @@
                 <input type="number" class="form-control" id="numeroGarage" name="numeroGarage" value="${fn:escapeXml(registro.numeroGarage)}" required min="1">
             </div>
             <div class="col-md-4">
-                <label class="form-label" for="lecturaLuz">Lectura del contador de luz</label>
+                <label class="form-label" for="lecturaLuz">Lectura del contador de luz (kWh)</label>
                 <input type="number" class="form-control" id="lecturaLuz" name="lecturaLuz" value="${fn:escapeXml(registro.lecturaLuz)}" required min="0" step="0.01">
             </div>
             <div class="col-md-4">
@@ -148,8 +120,8 @@
                 </select>
             </div>
             <div class="col-md-4">
-                <label class="form-label" for="zonaId">Zona (ID)</label>
-                <input type="number" class="form-control" id="zonaId" name="zonaId" value="${fn:escapeXml(registro.zonaId)}" required min="1">
+                <label class="form-label" for="zonaLetra">Letra de zona</label>
+                <input type="text" class="form-control" id="zonaLetra" name="zonaLetra" value="${fn:escapeXml(registro.zonaLetra)}" required maxlength="10">
             </div>
                 <div class="col-12">
                     <button type="submit" class="btn btn-primary"><c:out value="${editando ? 'Guardar cambios' : 'Registrar'}"/></button>

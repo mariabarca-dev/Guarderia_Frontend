@@ -18,8 +18,8 @@ import java.util.Map;
 public class VehiculoService {
 
     private static final String BASE = "/vehiculos";
-    /** Campos de VehiculoRequest / VehiculoUpdate del back. */
-    private static final String[] CAMPOS = {"socioId", "nombre", "matricula", "tipo", "profundidad", "ancho"};
+    /** Campos de VehiculoRequest / VehiculoUpdate del back que se copian tal cual del formulario (el socio se resuelve aparte). */
+    private static final String[] CAMPOS = {"nombre", "matricula", "tipo", "profundidad", "ancho"};
 
     private final BackendClientService backend;
 
@@ -86,6 +86,18 @@ public class VehiculoService {
     }
 
     /**
+     * Busca un socio por su DNI ({@code GET /usuarios/socios/dni/{dni}}): consulta puntual al back que
+     * devuelve el socio completo, con su ID interno.
+     *
+     * @param dni DNI escrito por el usuario
+     * @return datos del socio (id, nombre, apellido, dni...)
+     * @throws com.GuarderiaCentral.Guarderia_Frontend.client.BackendException 404 si no existe
+     */
+    public Map<String, Object> buscarSocioPorDni(String dni) {
+        return backend.getMapa("/usuarios/socios/dni/" + BackendClientService.segmento(dni.trim()));
+    }
+
+    /**
      * Vehículos de un socio ({@code GET /vehiculos/socio/{socioId}}).
      *
      * @param socioId ID del socio
@@ -99,11 +111,11 @@ public class VehiculoService {
     /**
      * Crea un vehículo ({@code POST /vehiculos}).
      *
-     * @param formulario parámetros del formulario
+     * @param formulario parámetros del formulario (el socio llega como DNI en {@code socioDni})
      * @throws com.GuarderiaCentral.Guarderia_Frontend.client.BackendException 400/409 si el back lo rechaza
      */
     public void crear(Map<String, String> formulario) {
-        backend.post(BASE, BackendClientService.armarCuerpo(formulario, CAMPOS));
+        backend.post(BASE, armarCuerpo(formulario));
     }
 
     /**
@@ -114,7 +126,7 @@ public class VehiculoService {
      * @throws com.GuarderiaCentral.Guarderia_Frontend.client.BackendException 400/404/409 si el back lo rechaza
      */
     public void editar(Integer id, Map<String, String> formulario) {
-        backend.put(BASE + "/" + id, BackendClientService.armarCuerpo(formulario, CAMPOS));
+        backend.put(BASE + "/" + id, armarCuerpo(formulario));
     }
 
     /**
@@ -125,5 +137,19 @@ public class VehiculoService {
      */
     public void darDeBaja(Integer id) {
         backend.delete(BASE + "/" + id);
+    }
+
+    /**
+     * Arma el cuerpo del Request/Update: copia los campos del formulario y reemplaza el DNI del socio
+     * que escribió el usuario por el ID interno del socio, que es lo que espera el back.
+     *
+     * @param formulario parámetros del formulario
+     * @return cuerpo listo para enviar al back
+     */
+    private Map<String, Object> armarCuerpo(Map<String, String> formulario) {
+        Map<String, Object> cuerpo = BackendClientService.armarCuerpo(formulario, CAMPOS);
+        String dni = formulario.get("socioDni");
+        cuerpo.put("socioId", dni == null || dni.isBlank() ? null : ((Number) buscarSocioPorDni(dni).get("id")).intValue());
+        return cuerpo;
     }
 }

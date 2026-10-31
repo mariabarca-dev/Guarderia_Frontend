@@ -25,8 +25,8 @@
             </div>
             <form action="${fn:escapeXml(raiz)}/de-rodado" method="get" class="row g-2 align-items-end mt-2">
                 <div class="col-sm-6 col-md-4">
-                    <label class="form-label">Ocupación de un rodado (ID del rodado)</label>
-                    <input type="number" class="form-control" name="nroRodado" required min="1">
+                    <label class="form-label">Ocupación de un rodado (matrícula)</label>
+                    <input type="text" class="form-control" name="matricula" required maxlength="50">
                 </div>
                 <div class="col-auto"><button type="submit" class="btn btn-primary">Buscar</button></div>
             </form>
@@ -44,8 +44,9 @@
                     <thead class="table-light">
                     <tr>
                     <th>ID</th>
-                    <th>Rodado (ID)</th>
-                    <th>Cochera (ID)</th>
+                    <th>Matrícula</th>
+                    <th>Nº de cochera</th>
+                    <th>Letra de zona</th>
                     <th>Fecha de asignación</th>
                     <c:if test="${esBajas}"><th>Estado</th></c:if>
                     <c:if test="${not esBajas and (puedeVer or puedeEliminar)}"><th class="text-end">Acciones</th></c:if>
@@ -55,8 +56,9 @@
                     <c:forEach var="r" items="${lista}">
                     <tr>
                     <td><c:out value="${r.id}"/></td>
-                    <td><c:out value="${r.vehiculoId}"/></td>
-                    <td><c:out value="${r.garageId}"/></td>
+                    <td><c:out value="${r.vehiculoMatricula}"/></td>
+                    <td><c:out value="${r.garageNumero}"/></td>
+                    <td><c:out value="${r.zonaLetra}"/></td>
                     <td><fmt:parseDate value="${r.fechaAsignacionGarage}" pattern="yyyy-MM-dd" var="fecha"/><fmt:formatDate value="${fecha}" pattern="dd/MM/yyyy"/></td>
                     <c:if test="${esBajas}">
                         <td>
@@ -108,12 +110,12 @@
                 <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
                 <c:if test="${editando}"><input type="hidden" name="id" value="${fn:escapeXml(registro.id)}"/></c:if>
             <div class="col-md-4">
-                <label class="form-label" for="vehiculoId">Rodado (ID)</label>
-                <input type="number" class="form-control" id="vehiculoId" name="vehiculoId" value="${fn:escapeXml(registro.vehiculoId)}" required min="1">
+                <label class="form-label" for="matricula">Matrícula del rodado</label>
+                <input type="text" class="form-control" id="matricula" name="matricula" value="${fn:escapeXml(registro.vehiculoMatricula)}" required maxlength="50">
             </div>
             <div class="col-md-4">
-                <label class="form-label" for="garageId">Cochera (ID)</label>
-                <input type="number" class="form-control" id="garageId" name="garageId" value="${fn:escapeXml(registro.garageId)}" required min="1">
+                <label class="form-label" for="numeroGarage">Nº de cochera</label>
+                <input type="number" class="form-control" id="numeroGarage" name="numeroGarage" value="${fn:escapeXml(registro.garageNumero)}" required min="1">
             </div>
             <div class="col-md-4">
                 <label class="form-label" for="fechaAsignacionGarage">Fecha de asignación</label>

@@ -41,8 +41,8 @@
             </form>
             <form action="${fn:escapeXml(raiz)}/de-socio" method="get" class="row g-2 align-items-end mt-2">
                 <div class="col-sm-6 col-md-4">
-                    <label class="form-label">Rodados de un socio (ID del socio)</label>
-                    <input type="number" class="form-control" name="nroSocio" required min="1">
+                    <label class="form-label">Rodados de un socio (DNI del socio)</label>
+                    <input type="text" class="form-control" name="dni" required maxlength="15">
                 </div>
                 <div class="col-auto"><button type="submit" class="btn btn-primary">Buscar</button></div>
             </form>
@@ -65,7 +65,9 @@
                     <th>Tipo</th>
                     <th>Profundidad (m)</th>
                     <th>Ancho (m)</th>
-                    <c:if test="${puedeConsultar}"><th>Socio (ID)</th></c:if>
+                    <c:if test="${puedeConsultar}"><th>DNI del socio</th></c:if>
+                    <c:if test="${puedeConsultar}"><th>Nombre del socio</th></c:if>
+                    <c:if test="${puedeConsultar}"><th>Apellido del socio</th></c:if>
                     <c:if test="${esBajas}"><th>Estado</th></c:if>
                     <c:if test="${not esBajas and (puedeVer or puedeEliminar)}"><th class="text-end">Acciones</th></c:if>
                     </tr>
@@ -79,7 +81,9 @@
                     <td><span class="badge bg-info text-dark"><c:out value="${fn:replace(r.tipo, '_', ' ')}"/></span></td>
                     <td><fmt:formatNumber value="${r.profundidad}" maxFractionDigits="2"/></td>
                     <td><fmt:formatNumber value="${r.ancho}" maxFractionDigits="2"/></td>
-                    <c:if test="${puedeConsultar}"><td><c:out value="${r.socioId}"/></td></c:if>
+                    <c:if test="${puedeConsultar}"><td><c:out value="${r.socioDni}"/></td></c:if>
+                    <c:if test="${puedeConsultar}"><td><c:out value="${r.socioNombre}"/></td></c:if>
+                    <c:if test="${puedeConsultar}"><td><c:out value="${r.socioApellido}"/></td></c:if>
                     <c:if test="${esBajas}">
                         <td>
                             <c:choose>
@@ -147,8 +151,8 @@
                 <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
                 <c:if test="${editando}"><input type="hidden" name="id" value="${fn:escapeXml(registro.id)}"/></c:if>
             <div class="col-md-4">
-                <label class="form-label" for="socioId">Socio (ID)</label>
-                <input type="number" class="form-control" id="socioId" name="socioId" value="${fn:escapeXml(registro.socioId)}" required min="1">
+                <label class="form-label" for="socioDni">DNI del socio</label>
+                <input type="text" class="form-control" id="socioDni" name="socioDni" value="${fn:escapeXml(registro.socioDni)}" required maxlength="15">
             </div>
             <div class="col-md-4">
                 <label class="form-label" for="nombre">Nombre o descripción</label>

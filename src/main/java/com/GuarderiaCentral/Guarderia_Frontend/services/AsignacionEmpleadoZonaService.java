@@ -16,8 +16,8 @@ import java.util.Map;
 public class AsignacionEmpleadoZonaService {
 
     private static final String BASE = "/asignaciones-empleado-zona";
-    /** Campos de AsignacionEmpleadoZonaRequest / AsignacionEmpleadoZonaUpdate del back. */
-    private static final String[] CAMPOS = {"empleadoId", "zonaId", "cantVehiculosACargo"};
+    /** Campos de AsignacionEmpleadoZonaRequest / AsignacionEmpleadoZonaUpdate del back que se copian tal cual del formulario (empleado y zona se resuelven aparte). */
+    private static final String[] CAMPOS = {"cantVehiculosACargo"};
 
     private final BackendClientService backend;
 
@@ -62,13 +62,36 @@ public class AsignacionEmpleadoZonaService {
     }
 
     /**
+     * Busca un empleado por su código ({@code GET /usuarios/empleados/codigo/{codigo}}): consulta puntual al back
+     * que devuelve el empleado completo, con su ID interno.
+     *
+     * @param codigo código de empleado escrito por el usuario
+     * @return datos del empleado (id, codigo, nombre, apellido...)
+     * @throws com.GuarderiaCentral.Guarderia_Frontend.client.BackendException 404 si no existe
+     */
+    public Map<String, Object> buscarEmpleadoPorCodigo(String codigo) {
+        return backend.getMapa("/usuarios/empleados/codigo/" + BackendClientService.segmento(codigo.trim()));
+    }
+
+    /**
+     * Sectores (asignaciones de zona activas) de un empleado ({@code GET /usuarios/empleados/{id}/zonas}).
+     *
+     * @param empleadoId ID interno del empleado
+     * @return lista de AsignacionEmpleadoZonaResponse
+     * @throws com.GuarderiaCentral.Guarderia_Frontend.client.BackendException 404 si el empleado no existe
+     */
+    public List<Map<String, Object>> listarDeEmpleado(Integer empleadoId) {
+        return backend.getLista("/usuarios/empleados/" + empleadoId + "/zonas");
+    }
+
+    /**
      * Crea una asignación ({@code POST /asignaciones-empleado-zona}).
      *
-     * @param formulario parámetros del formulario
+     * @param formulario parámetros del formulario (el empleado llega como código en {@code empleadoCodigo} y la zona como letra en {@code zonaLetra})
      * @throws com.GuarderiaCentral.Guarderia_Frontend.client.BackendException 400/409 (por ejemplo asignación duplicada)
      */
     public void crear(Map<String, String> formulario) {
-        backend.post(BASE, BackendClientService.armarCuerpo(formulario, CAMPOS));
+        backend.post(BASE, armarCuerpo(formulario));
     }
 
     /**
@@ -79,7 +102,7 @@ public class AsignacionEmpleadoZonaService {
      * @throws com.GuarderiaCentral.Guarderia_Frontend.client.BackendException 400/404/409 si el back la rechaza
      */
     public void editar(Integer id, Map<String, String> formulario) {
-        backend.put(BASE + "/" + id, BackendClientService.armarCuerpo(formulario, CAMPOS));
+        backend.put(BASE + "/" + id, armarCuerpo(formulario));
     }
 
     /**
@@ -91,5 +114,32 @@ public class AsignacionEmpleadoZonaService {
     public void darDeBaja(Integer id) {
         backend.delete(BASE + "/" + id);
     }
-}
 
+    /**
+     * Arma el cuerpo del Request/Update: copia los campos del formulario y reemplaza el código de empleado
+     * y la letra de zona que escribió el usuario por los IDs internos, que es lo que espera el back.
+     *
+     * @param formulario parámetros del formulario
+     * @return cuerpo listo para enviar al back
+     */
+    private Map<String, Object> armarCuerpo(Map<String, String> formulario) {
+        Map<String, Object> cuerpo = BackendClientService.armarCuerpo(formulario, CAMPOS);
+        String codigo = formulario.get("empleadoCodigo");
+        cuerpo.put("empleadoId", codigo == null || codigo.isBlank() ? null : ((Number) buscarEmpleadoPorCodigo(codigo).get("id")).intValue());
+        String letra = formulario.get("zonaLetra");
+        cuerpo.put("zonaId", letra == null || letra.isBlank() ? null : idDeZonaPorLetra(letra));
+        return cuerpo;
+    }
+
+    /**
+     * Consulta puntual al back de una zona por su letra ({@code GET /zonas/{letra}}) para obtener su ID.
+     *
+     * @param letra letra de la zona escrita por el usuario
+     * @return ID de la zona
+     * @throws com.GuarderiaCentral.Guarderia_Frontend.client.BackendException 404 si no existe
+     */
+    private Integer idDeZonaPorLetra(String letra) {
+        Map<String, Object> zona = backend.getMapa("/zonas/" + BackendClientService.segmento(letra.trim()));
+        return ((Number) zona.get("id")).intValue();
+    }
+}

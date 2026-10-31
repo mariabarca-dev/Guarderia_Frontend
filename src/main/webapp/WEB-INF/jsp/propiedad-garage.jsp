@@ -12,7 +12,7 @@
     esBajas (muestra Estado y oculta acciones), puedeVer, puedeCrear, puedeEditar, puedeEliminar,
     puedeConsultar (muestra la tarjeta de consultas; solo ADMINISTRADOR). Cuando es false (SOCIO)
     la tabla oculta las columnas ID y Socio (ID), que no le aportan nada.
-    garagesDelSocio y socioConsultado (opcionales): List<GarageResponse> de GET /propiedades-garage/socio/{id}.
+    garagesDelSocio y socioConsultado (opcionales): List<GarageResponse> de GET /propiedades-garage/socio/{id} y el texto "Nombre Apellido (DNI x)".
 --%>
 <c:set var="raiz" value="${pageContext.request.contextPath}${base}"/>
 <c:set var="editando" value="${not empty registro and puedeEditar}"/>
@@ -27,8 +27,8 @@
             </div>
             <form action="${fn:escapeXml(raiz)}/de-socio" method="get" class="row g-2 align-items-end mt-2">
                 <div class="col-sm-6 col-md-4">
-                    <label class="form-label">Cocheras compradas por un socio (ID del socio)</label>
-                    <input type="number" class="form-control" name="nroSocio" required min="1">
+                    <label class="form-label">Cocheras compradas por un socio (DNI del socio)</label>
+                    <input type="text" class="form-control" name="dni" required maxlength="15">
                 </div>
                 <div class="col-auto"><button type="submit" class="btn btn-primary">Buscar</button></div>
             </form>
@@ -46,7 +46,7 @@
                 <c:when test="${not empty garagesDelSocio}">
                     <table class="table table-striped mb-0 align-middle">
                         <thead class="table-light">
-                        <tr><th>ID</th><th>N° de cochera</th><th>Lectura de luz</th><th>Mantenimiento</th><th>Zona (ID)</th></tr>
+                        <tr><th>ID</th><th>N° de cochera</th><th>Lectura de luz (kWh)</th><th>Mantenimiento</th><th>Letra de zona</th></tr>
                         </thead>
                         <tbody>
                         <c:forEach var="g" items="${garagesDelSocio}">
@@ -55,7 +55,7 @@
                                 <td><c:out value="${g.numeroGarage}"/></td>
                                 <td><fmt:formatNumber value="${g.lecturaLuz}" maxFractionDigits="2"/></td>
                                 <td><c:out value="${g.servicioMantenimiento ? 'Sí' : 'No'}"/></td>
-                                <td><c:out value="${g.zonaId}"/></td>
+                                <td><c:out value="${g.zonaLetra}"/></td>
                             </tr>
                         </c:forEach>
                         </tbody>
@@ -79,7 +79,9 @@
                     <thead class="table-light">
                     <tr>
                     <c:if test="${puedeConsultar}"><th>ID</th></c:if>
-                    <c:if test="${puedeConsultar}"><th>Socio (ID)</th></c:if>
+                    <c:if test="${puedeConsultar}"><th>DNI del socio</th></c:if>
+                    <c:if test="${puedeConsultar}"><th>Nombre del socio</th></c:if>
+                    <c:if test="${puedeConsultar}"><th>Apellido del socio</th></c:if>
                     <th>Nº de cochera</th>
                     <th>Fecha de compra</th>
                     <c:if test="${esBajas}"><th>Estado</th></c:if>
@@ -90,7 +92,9 @@
                     <c:forEach var="r" items="${lista}">
                     <tr>
                     <c:if test="${puedeConsultar}"><td><c:out value="${r.id}"/></td></c:if>
-                    <c:if test="${puedeConsultar}"><td><c:out value="${r.socioId}"/></td></c:if>
+                    <c:if test="${puedeConsultar}"><td><c:out value="${r.socioDni}"/></td></c:if>
+                    <c:if test="${puedeConsultar}"><td><c:out value="${r.socioNombre}"/></td></c:if>
+                    <c:if test="${puedeConsultar}"><td><c:out value="${r.socioApellido}"/></td></c:if>
                     <td><c:out value="${r.garageNumero}"/></td>
                     <td><fmt:parseDate value="${r.fechaCompraGarage}" pattern="yyyy-MM-dd" var="fecha"/><fmt:formatDate value="${fecha}" pattern="dd/MM/yyyy"/></td>
                     <c:if test="${esBajas}">
@@ -143,12 +147,12 @@
                 <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
                 <c:if test="${editando}"><input type="hidden" name="id" value="${fn:escapeXml(registro.id)}"/></c:if>
             <div class="col-md-4">
-                <label class="form-label" for="socioId">Socio (ID)</label>
-                <input type="number" class="form-control" id="socioId" name="socioId" value="${fn:escapeXml(registro.socioId)}" required min="1">
+                <label class="form-label" for="socioDni">DNI del socio</label>
+                <input type="text" class="form-control" id="socioDni" name="socioDni" value="${fn:escapeXml(registro.socioDni)}" required maxlength="15">
             </div>
             <div class="col-md-4">
-                <label class="form-label" for="garageId">Cochera (ID)</label>
-                <input type="number" class="form-control" id="garageId" name="garageId" value="${fn:escapeXml(registro.garageId)}" required min="1">
+                <label class="form-label" for="numeroGarage">Nº de cochera</label>
+                <input type="number" class="form-control" id="numeroGarage" name="numeroGarage" value="${fn:escapeXml(registro.garageNumero)}" required min="1">
             </div>
             <div class="col-md-4">
                 <label class="form-label" for="fechaCompraGarage">Fecha de compra</label>

@@ -8,6 +8,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.util.UriUtils;
+
+import java.nio.charset.StandardCharsets;
 
 import java.util.List;
 import java.util.Map;
@@ -68,6 +71,33 @@ public class AsignacionEmpleadoZonaController {
     @GetMapping(BASE + "/historial")
     public String historial(Model model) {
         return mostrar(model, "Historial de sectores", asignacionEmpleadoZonaService.historial(), null, true);
+    }
+
+    /**
+     * Sectores de un empleado, buscado por su código. Primero consulta al back el empleado por código (para
+     * obtener su ID y mostrar nombre y apellido en el título) y después pide los sectores de ese empleado.
+     *
+     * @param codigo código del empleado
+     * @param model  modelo de la vista
+     * @return vista base "layout"
+     */
+    @GetMapping(BASE + "/de-empleado/{codigo}")
+    public String deEmpleado(@PathVariable String codigo, Model model) {
+        Map<String, Object> empleado = asignacionEmpleadoZonaService.buscarEmpleadoPorCodigo(codigo);
+        Integer empleadoId = ((Number) empleado.get("id")).intValue();
+        String titulo = "Sectores de " + empleado.get("nombre") + " " + empleado.get("apellido") + " (" + empleado.get("codigo") + ")";
+        return mostrar(model, titulo, asignacionEmpleadoZonaService.listarDeEmpleado(empleadoId), null, false);
+    }
+
+    /**
+     * Entrada del formulario de búsqueda por código de empleado.
+     *
+     * @param codigo código escrito por el usuario
+     * @return redirección a {@code /de-empleado/{codigo}}
+     */
+    @GetMapping(path = BASE + "/de-empleado", params = "codigo")
+    public String formularioEmpleado(@RequestParam String codigo) {
+        return "redirect:" + BASE + "/de-empleado/" + UriUtils.encodePathSegment(codigo.trim(), StandardCharsets.UTF_8);
     }
 
     /**

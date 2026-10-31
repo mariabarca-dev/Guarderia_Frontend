@@ -8,6 +8,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.util.UriUtils;
+
+import java.nio.charset.StandardCharsets;
 
 import java.util.List;
 import java.util.Map;
@@ -71,27 +74,30 @@ public class AsignacionVehiculoGarageController {
     }
 
     /**
-     * Ocupación actual de un vehículo.
+     * Ocupación actual de un vehículo, buscado por su matrícula. Primero consulta al back el vehículo por
+     * matrícula (para obtener su ID) y después pide la ocupación de ese vehículo.
      *
-     * @param vehiculoId ID del vehículo
-     * @param model      modelo de la vista
+     * @param matricula matrícula del vehículo
+     * @param model     modelo de la vista
      * @return vista base "layout"
      */
-    @GetMapping(BASE + "/de-rodado/{vehiculoId}")
-    public String deRodado(@PathVariable Integer vehiculoId, Model model) {
-        return mostrar(model, "Ocupación del rodado " + vehiculoId,
+    @GetMapping(BASE + "/de-rodado/{matricula}")
+    public String deRodado(@PathVariable String matricula, Model model) {
+        Map<String, Object> vehiculo = asignacionVehiculoGarageService.buscarVehiculoPorMatricula(matricula);
+        Integer vehiculoId = ((Number) vehiculo.get("id")).intValue();
+        return mostrar(model, "Ocupación del rodado " + vehiculo.get("matricula"),
                 List.of(asignacionVehiculoGarageService.buscarDeVehiculo(vehiculoId)), null, false);
     }
 
     /**
      * Entrada del formulario de búsqueda por rodado.
      *
-     * @param nroRodado ID del vehículo escrito por el usuario
-     * @return redirección a {@code /de-rodado/{vehiculoId}}
+     * @param matricula matrícula escrita por el usuario
+     * @return redirección a {@code /de-rodado/{matricula}}
      */
-    @GetMapping(path = BASE + "/de-rodado", params = "nroRodado")
-    public String formularioRodado(@RequestParam Integer nroRodado) {
-        return "redirect:" + BASE + "/de-rodado/" + nroRodado;
+    @GetMapping(path = BASE + "/de-rodado", params = "matricula")
+    public String formularioRodado(@RequestParam String matricula) {
+        return "redirect:" + BASE + "/de-rodado/" + UriUtils.encodePathSegment(matricula.trim(), StandardCharsets.UTF_8);
     }
 
     /**

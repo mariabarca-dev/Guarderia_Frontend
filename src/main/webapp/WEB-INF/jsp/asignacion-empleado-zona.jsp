@@ -11,7 +11,8 @@
   Model que arma el controller:
     titulo, base (ruta web de la tabla), lista (List<Map>), registro (Map a ver/editar, puede ser null),
     esBajas (muestra Estado y oculta acciones), puedeVer, puedeCrear, puedeEditar, puedeEliminar,
-    puedeConsultar (muestra la tarjeta de consultas; solo ADMINISTRADOR).
+    puedeConsultar (muestra la tarjeta de consultas; solo ADMINISTRADOR). Cuando es false (EMPLEADO en
+    /empleado/mis-sectores) la tabla oculta ID y los datos del empleado, que son los propios.
 --%>
 <c:set var="raiz" value="${pageContext.request.contextPath}${base}"/>
 <c:set var="editando" value="${not empty registro and puedeEditar}"/>
@@ -24,6 +25,13 @@
             <a class="btn btn-outline-dark btn-sm" href="${fn:escapeXml(raiz)}">Listado</a>
             <a class="btn btn-outline-dark btn-sm" href="${fn:escapeXml(raiz)}/historial">Historial (activas y dadas de baja)</a>
             </div>
+            <form action="${fn:escapeXml(raiz)}/de-empleado" method="get" class="row g-2 align-items-end mt-2">
+                <div class="col-sm-6 col-md-4">
+                    <label class="form-label">Buscar sectores por código de empleado</label>
+                    <input type="text" class="form-control" name="codigo" required maxlength="30">
+                </div>
+                <div class="col-auto"><button type="submit" class="btn btn-primary">Buscar</button></div>
+            </form>
 
         </div>
     </div>
@@ -38,9 +46,11 @@
                 <table class="table table-hover table-striped mb-0 align-middle">
                     <thead class="table-light">
                     <tr>
-                    <th>ID</th>
-                    <th>Empleado (ID)</th>
-                    <th>Zona (ID)</th>
+                    <c:if test="${puedeConsultar}"><th>ID</th></c:if>
+                    <c:if test="${puedeConsultar}"><th>Código de empleado</th></c:if>
+                    <c:if test="${puedeConsultar}"><th>Nombre del empleado</th></c:if>
+                    <c:if test="${puedeConsultar}"><th>Apellido del empleado</th></c:if>
+                    <th>Letra de zona</th>
                     <th>Vehículos a cargo</th>
                     <c:if test="${esBajas}"><th>Estado</th></c:if>
                     <c:if test="${not esBajas and (puedeVer or puedeEliminar)}"><th class="text-end">Acciones</th></c:if>
@@ -49,9 +59,11 @@
                     <tbody>
                     <c:forEach var="r" items="${lista}">
                     <tr>
-                    <td><c:out value="${r.id}"/></td>
-                    <td><c:out value="${r.empleadoId}"/></td>
-                    <td><c:out value="${r.zonaId}"/></td>
+                    <c:if test="${puedeConsultar}"><td><c:out value="${r.id}"/></td></c:if>
+                    <c:if test="${puedeConsultar}"><td><c:out value="${r.empleadoCodigo}"/></td></c:if>
+                    <c:if test="${puedeConsultar}"><td><c:out value="${r.empleadoNombre}"/></td></c:if>
+                    <c:if test="${puedeConsultar}"><td><c:out value="${r.empleadoApellido}"/></td></c:if>
+                    <td><c:out value="${r.zonaLetra}"/></td>
                     <td><c:out value="${r.cantVehiculosACargo}"/></td>
                     <c:if test="${esBajas}">
                         <td>
@@ -103,12 +115,12 @@
                 <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
                 <c:if test="${editando}"><input type="hidden" name="id" value="${fn:escapeXml(registro.id)}"/></c:if>
             <div class="col-md-4">
-                <label class="form-label" for="empleadoId">Empleado (ID)</label>
-                <input type="number" class="form-control" id="empleadoId" name="empleadoId" value="${fn:escapeXml(registro.empleadoId)}" required min="1">
+                <label class="form-label" for="empleadoCodigo">Código de empleado</label>
+                <input type="text" class="form-control" id="empleadoCodigo" name="empleadoCodigo" value="${fn:escapeXml(registro.empleadoCodigo)}" required maxlength="30">
             </div>
             <div class="col-md-4">
-                <label class="form-label" for="zonaId">Zona (ID)</label>
-                <input type="number" class="form-control" id="zonaId" name="zonaId" value="${fn:escapeXml(registro.zonaId)}" required min="1">
+                <label class="form-label" for="zonaLetra">Letra de zona</label>
+                <input type="text" class="form-control" id="zonaLetra" name="zonaLetra" value="${fn:escapeXml(registro.zonaLetra)}" required maxlength="10">
             </div>
             <div class="col-md-4">
                 <label class="form-label" for="cantVehiculosACargo">Vehículos a cargo</label>

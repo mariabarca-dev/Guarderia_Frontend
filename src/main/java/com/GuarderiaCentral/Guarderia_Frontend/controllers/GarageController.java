@@ -69,18 +69,6 @@ public class GarageController {
     }
 
     /**
-     * Ocupación por zona (espacios ocupados y disponibles), junto con la lista de garages.
-     *
-     * @param model modelo de la vista
-     * @return vista base "layout"
-     */
-    @GetMapping(BASE + "/ocupacion")
-    public String ocupacion(Model model) {
-        model.addAttribute("ocupacion", garageService.disponibilidad());
-        return mostrar(model, "Cocheras", garageService.listar(), null, false);
-    }
-
-    /**
      * Crea un garage.
      *
      * @param formulario parámetros del formulario

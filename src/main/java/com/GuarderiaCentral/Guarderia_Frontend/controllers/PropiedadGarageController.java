@@ -8,6 +8,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.util.UriUtils;
+
+import java.nio.charset.StandardCharsets;
 
 import java.util.List;
 import java.util.Map;
@@ -69,28 +72,31 @@ public class PropiedadGarageController {
     }
 
     /**
-     * Garages comprados por un socio (bloque aparte, junto con la lista de compras).
+     * Garages comprados por un socio, buscado por su DNI (bloque aparte, junto con la lista de compras).
+     * Primero consulta al back el socio por DNI para obtener su ID y mostrar nombre y apellido.
      *
-     * @param socioId ID del socio
-     * @param model   modelo de la vista
+     * @param dni   DNI del socio
+     * @param model modelo de la vista
      * @return vista base "layout"
      */
-    @GetMapping(BASE + "/de-socio/{socioId}")
-    public String deSocio(@PathVariable Integer socioId, Model model) {
+    @GetMapping(BASE + "/de-socio/{dni}")
+    public String deSocio(@PathVariable String dni, Model model) {
+        Map<String, Object> socio = propiedadGarageService.buscarSocioPorDni(dni);
+        Integer socioId = ((Number) socio.get("id")).intValue();
         model.addAttribute("garagesDelSocio", propiedadGarageService.garagesDeSocio(socioId));
-        model.addAttribute("socioConsultado", socioId);
+        model.addAttribute("socioConsultado", socio.get("nombre") + " " + socio.get("apellido") + " (DNI " + socio.get("dni") + ")");
         return mostrar(model, "Compras de cocheras", propiedadGarageService.listar(), null, false);
     }
 
     /**
      * Entrada del formulario de búsqueda por socio.
      *
-     * @param nroSocio ID del socio escrito por el usuario
-     * @return redirección a {@code /de-socio/{socioId}}
+     * @param dni DNI del socio escrito por el usuario
+     * @return redirección a {@code /de-socio/{dni}}
      */
-    @GetMapping(path = BASE + "/de-socio", params = "nroSocio")
-    public String formularioSocio(@RequestParam Integer nroSocio) {
-        return "redirect:" + BASE + "/de-socio/" + nroSocio;
+    @GetMapping(path = BASE + "/de-socio", params = "dni")
+    public String formularioSocio(@RequestParam String dni) {
+        return "redirect:" + BASE + "/de-socio/" + UriUtils.encodePathSegment(dni.trim(), StandardCharsets.UTF_8);
     }
 
     /**

@@ -64,8 +64,8 @@
                     <td><c:out value="${r.capacidadVehiculos}"/></td>
                     <td><fmt:formatNumber value="${r.anchoGarage}" maxFractionDigits="2"/></td>
                     <td><fmt:formatNumber value="${r.largoGarage}" maxFractionDigits="2"/></td>
-                    <td><c:out value="${r.espaciosOcupados}"/></td>
-                    <td><c:out value="${r.espaciosDisponibles}"/></td>
+                    <td><c:out value="${esBajas and not r.activo ? '-' : r.espaciosOcupados}"/></td>
+                    <td><c:out value="${esBajas and not r.activo ? '-' : r.espaciosDisponibles}"/></td>
                     <c:if test="${esBajas}">
                         <td>
                             <c:choose>

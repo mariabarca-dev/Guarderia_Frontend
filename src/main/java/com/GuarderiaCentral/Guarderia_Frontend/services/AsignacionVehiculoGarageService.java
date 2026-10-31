@@ -16,8 +16,8 @@ import java.util.Map;
 public class AsignacionVehiculoGarageService {
 
     private static final String BASE = "/asignaciones-vehiculo-garage";
-    /** Campos de AsignacionVehiculoGarageRequest / AsignacionVehiculoGarageUpdate del back. */
-    private static final String[] CAMPOS = {"vehiculoId", "garageId", "fechaAsignacionGarage"};
+    /** Campos de AsignacionVehiculoGarageRequest / AsignacionVehiculoGarageUpdate del back que se copian tal cual del formulario (vehículo y cochera se resuelven aparte). */
+    private static final String[] CAMPOS = {"fechaAsignacionGarage"};
 
     private final BackendClientService backend;
 
@@ -62,6 +62,18 @@ public class AsignacionVehiculoGarageService {
     }
 
     /**
+     * Busca un vehículo por su matrícula ({@code GET /vehiculos/matricula/{matricula}}): consulta puntual al back
+     * que devuelve el vehículo completo, con su ID interno.
+     *
+     * @param matricula matrícula escrita por el usuario
+     * @return datos del vehículo (id, matricula, nombre...)
+     * @throws com.GuarderiaCentral.Guarderia_Frontend.client.BackendException 404 si no existe
+     */
+    public Map<String, Object> buscarVehiculoPorMatricula(String matricula) {
+        return backend.getMapa("/vehiculos/matricula/" + BackendClientService.segmento(matricula.trim()));
+    }
+
+    /**
      * Ocupación actual de un vehículo ({@code GET /asignaciones-vehiculo-garage/vehiculo/{vehiculoId}}).
      * El back devuelve un único registro.
      *
@@ -76,11 +88,11 @@ public class AsignacionVehiculoGarageService {
     /**
      * Asigna un vehículo a un garage ({@code POST /asignaciones-vehiculo-garage}).
      *
-     * @param formulario parámetros del formulario
+     * @param formulario parámetros del formulario (el rodado llega como matrícula en {@code matricula} y la cochera como número en {@code numeroGarage})
      * @throws com.GuarderiaCentral.Guarderia_Frontend.client.BackendException 400/409 (por ejemplo garage ocupado)
      */
     public void crear(Map<String, String> formulario) {
-        backend.post(BASE, BackendClientService.armarCuerpo(formulario, CAMPOS));
+        backend.post(BASE, armarCuerpo(formulario));
     }
 
     /**
@@ -91,7 +103,7 @@ public class AsignacionVehiculoGarageService {
      * @throws com.GuarderiaCentral.Guarderia_Frontend.client.BackendException 400/404/409 si el back la rechaza
      */
     public void editar(Integer id, Map<String, String> formulario) {
-        backend.put(BASE + "/" + id, BackendClientService.armarCuerpo(formulario, CAMPOS));
+        backend.put(BASE + "/" + id, armarCuerpo(formulario));
     }
 
     /**
@@ -102,5 +114,33 @@ public class AsignacionVehiculoGarageService {
      */
     public void darDeBaja(Integer id) {
         backend.delete(BASE + "/" + id);
+    }
+
+    /**
+     * Arma el cuerpo del Request/Update: copia los campos del formulario y reemplaza la matrícula y el número
+     * de cochera que escribió el usuario por los IDs internos, que es lo que espera el back.
+     *
+     * @param formulario parámetros del formulario
+     * @return cuerpo listo para enviar al back
+     */
+    private Map<String, Object> armarCuerpo(Map<String, String> formulario) {
+        Map<String, Object> cuerpo = BackendClientService.armarCuerpo(formulario, CAMPOS);
+        String matricula = formulario.get("matricula");
+        cuerpo.put("vehiculoId", matricula == null || matricula.isBlank() ? null : ((Number) buscarVehiculoPorMatricula(matricula).get("id")).intValue());
+        String numero = formulario.get("numeroGarage");
+        cuerpo.put("garageId", numero == null || numero.isBlank() ? null : idDeGaragePorNumero(numero));
+        return cuerpo;
+    }
+
+    /**
+     * Consulta puntual al back de una cochera por su número ({@code GET /garages/numero/{numero}}) para obtener su ID.
+     *
+     * @param numero número de cochera escrito por el usuario
+     * @return ID de la cochera
+     * @throws com.GuarderiaCentral.Guarderia_Frontend.client.BackendException 404 si no existe
+     */
+    private Integer idDeGaragePorNumero(String numero) {
+        Map<String, Object> garage = backend.getMapa("/garages/numero/" + BackendClientService.segmento(numero.trim()));
+        return ((Number) garage.get("id")).intValue();
     }
 }

@@ -3,6 +3,7 @@ package com.GuarderiaCentral.Guarderia_Frontend.services;
 import com.GuarderiaCentral.Guarderia_Frontend.client.BackendClientService;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -19,6 +20,8 @@ import java.util.Map;
 public class ZonaService {
 
     private static final String BASE = "/zonas";
+    /** Zonas activas con la ocupación calculada (la expone el back en el controller de garages). */
+    private static final String DISPONIBILIDAD = "/garages/disponibilidad";
     /** Campos de ZonaRequest / ZonaUpdate del back. */
     private static final String[] CAMPOS = {"letra", "tipoVehiculo", "capacidadVehiculos", "anchoGarage", "largoGarage"};
 
@@ -34,23 +37,39 @@ public class ZonaService {
     }
 
     /**
-     * Zonas activas, con espacios disponibles y ocupados ({@code GET /zonas}).
+     * Zonas activas con sus espacios ocupados y disponibles REALES. {@code GET /zonas} no calcula la ocupación
+     * (devuelve 0), por eso se usa {@code GET /garages/disponibilidad}, que devuelve las mismas zonas
+     * (ZonaResponse) con los espacios calculados desde las ocupaciones activas.
      *
-     * @return lista de ZonaResponse
+     * @return lista de ZonaResponse con espaciosOcupados y espaciosDisponibles
      * @throws com.GuarderiaCentral.Guarderia_Frontend.client.BackendException si el back responde con error
      */
     public List<Map<String, Object>> listar() {
-        return backend.getLista(BASE);
+        return backend.getLista(DISPONIBILIDAD);
     }
 
     /**
-     * Todas las zonas, activas y dadas de baja ({@code GET /zonas/inactivos}).
+     * Todas las zonas, activas y dadas de baja ({@code GET /zonas/inactivos}). A las zonas activas se les
+     * completan los espacios ocupados y disponibles reales (ver {@link #listar()}); las dadas de baja no
+     * tienen ocupación y conservan lo que informa el back.
      *
      * @return lista de ZonaResponse con su campo activo
      * @throws com.GuarderiaCentral.Guarderia_Frontend.client.BackendException si el back responde con error
      */
     public List<Map<String, Object>> listarConBajas() {
-        return backend.getLista(BASE + "/inactivos");
+        List<Map<String, Object>> zonas = backend.getLista(BASE + "/inactivos");
+        Map<Object, Map<String, Object>> disponibilidadPorId = new HashMap<>();
+        for (Map<String, Object> zona : backend.getLista(DISPONIBILIDAD)) {
+            disponibilidadPorId.put(zona.get("id"), zona);
+        }
+        for (Map<String, Object> zona : zonas) {
+            Map<String, Object> real = disponibilidadPorId.get(zona.get("id"));
+            if (real != null) {
+                zona.put("espaciosOcupados", real.get("espaciosOcupados"));
+                zona.put("espaciosDisponibles", real.get("espaciosDisponibles"));
+            }
+        }
+        return zonas;
     }
 
     /**

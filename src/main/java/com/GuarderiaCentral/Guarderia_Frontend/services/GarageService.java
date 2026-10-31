@@ -15,8 +15,8 @@ import java.util.Map;
 public class GarageService {
 
     private static final String BASE = "/garages";
-    /** Campos de GarageRequest / GarageUpdate del back. */
-    private static final String[] CAMPOS = {"numeroGarage", "lecturaLuz", "servicioMantenimiento", "zonaId"};
+    /** Campos de GarageRequest / GarageUpdate del back que se copian tal cual del formulario (la zona se resuelve aparte). */
+    private static final String[] CAMPOS = {"numeroGarage", "lecturaLuz", "servicioMantenimiento"};
 
     private final BackendClientService backend;
 
@@ -50,17 +50,6 @@ public class GarageService {
     }
 
     /**
-     * Ocupación por zona ({@code GET /garages/disponibilidad}). El back devuelve ZonaResponse
-     * (con espaciosDisponibles y espaciosOcupados), no garages.
-     *
-     * @return lista de ZonaResponse
-     * @throws com.GuarderiaCentral.Guarderia_Frontend.client.BackendException si el back responde con error
-     */
-    public List<Map<String, Object>> disponibilidad() {
-        return backend.getLista(BASE + "/disponibilidad");
-    }
-
-    /**
      * Busca un garage por ID ({@code GET /garages/{id}}).
      *
      * @param id ID del garage
@@ -74,11 +63,11 @@ public class GarageService {
     /**
      * Crea un garage ({@code POST /garages}).
      *
-     * @param formulario parámetros del formulario
+     * @param formulario parámetros del formulario (la zona llega como letra en {@code zonaLetra})
      * @throws com.GuarderiaCentral.Guarderia_Frontend.client.BackendException 400/409 si el back lo rechaza
      */
     public void crear(Map<String, String> formulario) {
-        backend.post(BASE, BackendClientService.armarCuerpo(formulario, CAMPOS));
+        backend.post(BASE, armarCuerpo(formulario));
     }
 
     /**
@@ -89,7 +78,7 @@ public class GarageService {
      * @throws com.GuarderiaCentral.Guarderia_Frontend.client.BackendException 400/404/409 si el back lo rechaza
      */
     public void editar(Integer id, Map<String, String> formulario) {
-        backend.put(BASE + "/" + id, BackendClientService.armarCuerpo(formulario, CAMPOS));
+        backend.put(BASE + "/" + id, armarCuerpo(formulario));
     }
 
     /**
@@ -100,5 +89,33 @@ public class GarageService {
      */
     public void darDeBaja(Integer id) {
         backend.delete(BASE + "/" + id);
+    }
+
+    /**
+     * Arma el cuerpo del Request/Update: copia los campos del formulario y reemplaza la letra de zona
+     * que escribió el usuario por el ID interno de esa zona, que es lo que espera el back.
+     *
+     * @param formulario parámetros del formulario
+     * @return cuerpo listo para enviar al back
+     */
+    private Map<String, Object> armarCuerpo(Map<String, String> formulario) {
+        Map<String, Object> cuerpo = BackendClientService.armarCuerpo(formulario, CAMPOS);
+        cuerpo.put("zonaId", idDeZonaPorLetra(formulario.get("zonaLetra")));
+        return cuerpo;
+    }
+
+    /**
+     * Consulta puntual al back de una zona por su letra ({@code GET /zonas/{letra}}) para obtener su ID.
+     *
+     * @param letra letra de la zona escrita por el usuario
+     * @return ID de la zona, o null si no se escribió ninguna letra
+     * @throws com.GuarderiaCentral.Guarderia_Frontend.client.BackendException 404 si la zona no existe
+     */
+    private Integer idDeZonaPorLetra(String letra) {
+        if (letra == null || letra.isBlank()) {
+            return null;
+        }
+        Map<String, Object> zona = backend.getMapa("/zonas/" + BackendClientService.segmento(letra.trim()));
+        return ((Number) zona.get("id")).intValue();
     }
 }
