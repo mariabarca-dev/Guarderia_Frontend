@@ -5,6 +5,7 @@ import com.GuarderiaCentral.Guarderia_Frontend.security.UsuarioAutenticado;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,15 +34,21 @@ public class LoginController {
      * Muestra el login. Si se llega con la sesión abierta (por ejemplo con la flecha "atrás" del
      * navegador o escribiendo /login), las credenciales se descartan: se cierra la sesión del back
      * y la del front, y se vuelve a mostrar el login. Así la flecha "adelante" ya no permite entrar.
+     * <p>
+     * Spring entrega el {@link UsuarioAutenticado} ya tipado con {@link AuthenticationPrincipal};
+     * si no hay sesión (visitante anónimo) llega {@code null} y no hay nada que cerrar.
+     * </p>
      *
-     * @param authentication autenticación actual (null si es anónimo)
+     * @param usuario        usuario autenticado (null si es anónimo)
+     * @param authentication autenticación actual, que necesitan los handlers de logout
      * @param request        petición actual
      * @param response       respuesta actual
      * @return vista login.jsp, o redirección a /login?logout luego de cerrar la sesión
      */
     @GetMapping("/login")
-    public String login(Authentication authentication, HttpServletRequest request, HttpServletResponse response) {
-        if (authentication != null && authentication.getPrincipal() instanceof UsuarioAutenticado) {
+    public String login(@AuthenticationPrincipal UsuarioAutenticado usuario, Authentication authentication,
+                        HttpServletRequest request, HttpServletResponse response) {
+        if (usuario != null) {
             backendLogoutHandler.logout(request, response, authentication);
             new SecurityContextLogoutHandler().logout(request, response, authentication);
             return "redirect:/login?logout";

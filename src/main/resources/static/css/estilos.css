@@ -198,6 +198,22 @@ details summary {
     --bs-btn-active-color: #000000;
 }
 
+/* Botones de consulta y de acciones por fila (Listado, Historial, Rodados, Cocheras,
+   Sectores, Encargos): borde y letra claros para que se vean sin pasar el mouse */
+.btn-outline-dark,
+.btn-outline-secondary {
+    --bs-btn-color: #ffffff;
+    --bs-btn-border-color: rgba(255, 255, 255, 0.7);
+    --bs-btn-hover-bg: #ffd21f;
+    --bs-btn-hover-color: #000000;
+    --bs-btn-hover-border-color: #ffd21f;
+    --bs-btn-active-bg: #ffd21f;
+    --bs-btn-active-color: #000000;
+    --bs-btn-active-border-color: #ffd21f;
+    --bs-btn-disabled-color: #ffffff;
+    --bs-btn-disabled-border-color: rgba(255, 255, 255, 0.4);
+}
+
 /* Recuadro del login */
 .card.card-login {
     --bs-card-bg: rgba(255, 255, 255, 0.97);

@@ -258,32 +258,54 @@ public class BackendClientService {
     }
 
     /**
-     * Convierte un error de RestTemplate en {@link BackendException} con el campo "message" del back.
+     * Convierte un error de RestTemplate en {@link BackendException}. Según el tipo de error, el
+     * {@code switch} con patrones (Java 21) delega en un método chico: respuesta HTTP del back,
+     * falta de conexión o error inesperado.
+     */
+    private BackendException traducir(RestClientException e, String path, HttpMethod method) {
+        return switch (e) {
+            case HttpStatusCodeException http -> traducirRespuestaHttp(http, path, method);
+            case ResourceAccessException sinConexion -> traducirSinConexion(sinConexion, path, method);
+            default -> traducirErrorInesperado(e, path, method);
+        };
+    }
+
+    /**
+     * El back respondió con un error HTTP: usa el campo "message" de su JSON
+     * (o un mensaje genérico si el cuerpo no es JSON o el error es del servidor, 5xx).
      */
     @SuppressWarnings("unchecked")
-    private BackendException traducir(RestClientException e, String path, HttpMethod method) {
-        if (e instanceof HttpStatusCodeException http) {
-            int status = http.getStatusCode().value();
-            String mensaje = MENSAJE_GENERICO;
-            try {
-                Map<String, Object> error = http.getResponseBodyAs(Map.class);
-                if (error != null && error.get("message") != null) {
-                    mensaje = String.valueOf(error.get("message"));
-                }
-            } catch (RuntimeException ignorada) {
-                // el cuerpo no era JSON: queda el mensaje genérico
+    private BackendException traducirRespuestaHttp(HttpStatusCodeException http, String path, HttpMethod method) {
+        int status = http.getStatusCode().value();
+        String mensaje = MENSAJE_GENERICO;
+        try {
+            Map<String, Object> error = http.getResponseBodyAs(Map.class);
+            if (error != null && error.get("message") != null) {
+                mensaje = String.valueOf(error.get("message"));
             }
-            if (status >= 500) {
-                mensaje = MENSAJE_GENERICO;
-            }
-            log.warn("El back respondió {} a {} {}: {}", status, method, path, mensaje);
-            return new BackendException(status, mensaje);
+        } catch (RuntimeException ignorada) {
+            // el cuerpo no era JSON: queda el mensaje genérico
         }
-        if (e instanceof ResourceAccessException) {
-            log.error("Sin conexión con el back en {} {}: {}", method, path, e.getMessage());
-        } else {
-            log.error("Error inesperado llamando a {} {}: {}", method, path, e.getMessage());
+        if (status >= 500) {
+            mensaje = MENSAJE_GENERICO;
         }
+        log.warn("El back respondió {} a {} {}: {}", status, method, path, mensaje);
+        return new BackendException(status, mensaje);
+    }
+
+    /**
+     * No se pudo conectar con el back (caído, red cortada o sin respuesta).
+     */
+    private BackendException traducirSinConexion(ResourceAccessException e, String path, HttpMethod method) {
+        log.error("Sin conexión con el back en {} {}: {}", method, path, e.getMessage());
+        return new BackendException(BackendException.SIN_CONEXION, MENSAJE_SIN_CONEXION);
+    }
+
+    /**
+     * Cualquier otro error de RestTemplate que no es una respuesta HTTP ni una falta de conexión.
+     */
+    private BackendException traducirErrorInesperado(RestClientException e, String path, HttpMethod method) {
+        log.error("Error inesperado llamando a {} {}: {}", method, path, e.getMessage());
         return new BackendException(BackendException.SIN_CONEXION, MENSAJE_SIN_CONEXION);
     }
 
@@ -307,12 +329,16 @@ public class BackendClientService {
 
     /**
      * Lee la cookie del back guardada en el {@link UsuarioAutenticado} de la sesión del front.
+     * Este service no recibe el usuario por parámetro, así que se lee del contexto de seguridad y
+     * el tipo del principal se resuelve con un {@code switch} con patrones (Java 21): si es un
+     * {@link UsuarioAutenticado} devuelve su cookie; con cualquier otro caso (null o anónimo) devuelve null.
      */
     private String cookieDeLaSesion() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.getPrincipal() instanceof UsuarioAutenticado usuario) {
-            return usuario.getCookieBack();
-        }
-        return null;
+        Object principal = auth == null ? null : auth.getPrincipal();
+        return switch (principal) {
+            case UsuarioAutenticado usuario -> usuario.getCookieBack();
+            case null, default -> null;
+        };
     }
 }

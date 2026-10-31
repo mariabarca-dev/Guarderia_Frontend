@@ -1,8 +1,7 @@
 package com.GuarderiaCentral.Guarderia_Frontend.advice;
 
 import com.GuarderiaCentral.Guarderia_Frontend.security.UsuarioAutenticado;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -19,13 +18,15 @@ public class ModeloGlobalAdvice {
 
     /**
      * Carga {@code rol} y {@code nombreUsuario} si hay un usuario autenticado.
+     * Spring entrega el usuario ya tipado con {@link AuthenticationPrincipal}; si el visitante
+     * es anónimo llega {@code null} y el modelo queda sin esos datos.
      *
-     * @param model modelo de la vista actual
+     * @param usuario usuario autenticado (null si es anónimo)
+     * @param model   modelo de la vista actual
      */
     @ModelAttribute
-    public void agregarDatosDelUsuario(Model model) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.getPrincipal() instanceof UsuarioAutenticado usuario) {
+    public void agregarDatosDelUsuario(@AuthenticationPrincipal UsuarioAutenticado usuario, Model model) {
+        if (usuario != null) {
             model.addAttribute("rol", usuario.getRol().toLowerCase());
             model.addAttribute("nombreUsuario", usuario.getNombreUsuario());
         }
