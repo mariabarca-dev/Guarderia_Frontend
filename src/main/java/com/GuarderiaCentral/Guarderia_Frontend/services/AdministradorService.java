@@ -32,8 +32,18 @@ public class AdministradorService {
 
     public Object crearAdministrador(Map<String, String> formulario) {
         Map<String, Object> body = BackendClientService.armarCuerpo(formulario,
-                "nombre", "apellido", "dni", "direccion", "telefono", "nombreUsuario", "clave");
+                "nombre", "apellido", "dni", "direccion", "telefono", "nombreUsuario", "clave", "rol");
         return backendClientService.post("/usuarios/administradores", body);
+    }
+
+    /**
+     * Pide al back los roles que se pueden elegir al crear una cuenta de administración
+     * (todos los del enum salvo SOCIO, EMPLEADO y SYSADMIN). Llena el desplegable "Rol" del formulario.
+     *
+     * @return lista de nombres de rol, por ejemplo ["ADMINISTRADOR", "SUPERVISOR"]
+     */
+    public Object listarRolesCreables() {
+        return backendClientService.get("/usuarios/administradores/roles-creables");
     }
 
     /**

@@ -71,6 +71,18 @@
                            value="<c:out value='${registro.telefono}'/>">
                 </div>
 
+                <%-- El rol solo se elige al crear (el back no lo modifica al editar). La lista la arma el back --%>
+                <c:if test="${empty registro}">
+                    <div class="col-md-4">
+                        <label for="rol" class="form-label">Rol</label>
+                        <select class="form-select" id="rol" name="rol">
+                            <c:forEach var="r" items="${rolesCreables}">
+                                <option value="${r}" <c:if test="${r eq 'ADMINISTRADOR'}">selected</c:if>><c:out value="${r}"/></option>
+                            </c:forEach>
+                        </select>
+                    </div>
+                </c:if>
+
                 <div class="col-12">
                     <button type="submit" class="btn btn-primary">
                         <c:choose>
@@ -123,6 +135,7 @@
                             <th>Nombre y Apellido</th>
                             <th>DNI</th>
                             <th>Usuario</th>
+                            <th>Rol</th>
                             <th>Teléfono</th>
                             <th>Dirección</th>
                             <c:if test="${modoBajas}"><th>Estado</th></c:if>
@@ -146,6 +159,7 @@
                                         </c:otherwise>
                                     </c:choose>
                                 </td>
+                                <td><span class="badge rol-${a.rol}"><c:out value="${a.rol}"/></span></td>
                                 <td><c:out value="${empty a.telefono ? '-' : a.telefono}"/></td>
                                 <td><c:out value="${empty a.direccion ? '-' : a.direccion}"/></td>
                                 <c:if test="${modoBajas}">

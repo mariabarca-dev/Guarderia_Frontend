@@ -434,6 +434,7 @@ public class UsuarioController {
     @GetMapping("/{rol:administrador|sysadmin}/cuentas-administradores")
     public String listarCuentasAdministradores(@PathVariable String rol, Model model) {
         model.addAttribute("registros", administradorService.listarAdministradores());
+        model.addAttribute("rolesCreables", administradorService.listarRolesCreables());
         model.addAttribute("rutaBase", "/" + rol + "/cuentas-administradores");
         model.addAttribute("puedeCrear", true);
         model.addAttribute("puedeEditar", true);
@@ -459,6 +460,7 @@ public class UsuarioController {
     public String verCuentaAdministrador(@PathVariable String rol, @PathVariable Integer id, Model model) {
         model.addAttribute("registro", administradorService.obtenerAdministradorPorId(id));
         model.addAttribute("registros", administradorService.listarAdministradores());
+        model.addAttribute("rolesCreables", administradorService.listarRolesCreables());
         model.addAttribute("rutaBase", "/" + rol + "/cuentas-administradores");
         model.addAttribute("puedeCrear", true);
         model.addAttribute("puedeEditar", true);
