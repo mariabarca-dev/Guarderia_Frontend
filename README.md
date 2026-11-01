@@ -18,6 +18,7 @@ Este repositorio es el **frontend** del sistema de la cochera "Guardería Centra
 | Vistas | JSP + JSTL (Tomcat Jasper) |
 | Seguridad | Spring Security (login contra el backend, protección CSRF) |
 | Estilos | Bootstrap 5 (por CDN, requiere internet) y `static/css/estilos.css` |
+| Serialización | Jackson (a través de `RestTemplate`) |
 | Utilidades | Lombok |
 | Puerto | `8081` |
 
@@ -37,6 +38,10 @@ El frontend no usa DTO: los datos viajan como `Map` / `List<Map>`. El paquete ba
 | `security` | Autenticación contra el backend, redirección por rol y cierre de sesión. |
 | `config` | `SecurityConfig` (rutas por rol), `RestTemplateConfig`, `WebConfig`. |
 | `advice` | Datos globales para las vistas y manejo de errores del backend. |
+
+### Deserialización de datos
+
+El frontend no tiene DTO. `BackendClientService` (con `RestTemplate`) recibe el JSON del backend y **Jackson** lo convierte a `Map` / `List<Map>`, que los controllers pasan al `Model` y las JSP leen con `${r.campo}`. Al enviar datos, el service arma un `Map` que Jackson serializa a JSON para el backend.
 
 ### Cómo se arma una pantalla
 
