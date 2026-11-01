@@ -1,4 +1,4 @@
-# GuarderiaCentral – Frontend (Spring MVC + JSP)
+# GuarderíaCentral – Frontend (Spring MVC + JSP)
 
 Trabajo práctico de **Programación 2** – Tecnicatura Universitaria en Informática Aplicada, UTN-INSPT.
 **Grupo A – Tema 9.** Profesor: Miguel Silva.
