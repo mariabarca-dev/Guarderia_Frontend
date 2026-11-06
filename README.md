@@ -14,7 +14,7 @@ Este repositorio es el **frontend** del sistema de la cochera "Guardería Centra
 | Componente | Versión / detalle |
 |---|---|
 | Java | 21 |
-| Spring Boot | Spring MVC (Maven, empaquetado WAR) |
+| Spring Boot | 4.1.1 (Spring MVC, Maven, empaquetado WAR) |
 | Vistas | JSP + JSTL (Tomcat Jasper) |
 | Seguridad | Spring Security (login contra el backend, protección CSRF) |
 | Estilos | Bootstrap 5 (por CDN, requiere internet) y `static/css/estilos.css` |
