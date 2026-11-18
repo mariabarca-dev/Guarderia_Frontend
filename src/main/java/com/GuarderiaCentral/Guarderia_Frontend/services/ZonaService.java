@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Espejo de ZonaService del back (solo ADMINISTRADOR). Endpoint base: /zonas.
@@ -57,19 +58,28 @@ public class ZonaService {
      * @throws com.GuarderiaCentral.Guarderia_Frontend.client.BackendException si el back responde con error
      */
     public List<Map<String, Object>> listarConBajas() {
-        List<Map<String, Object>> zonas = backend.getLista(BASE + "/inactivos");
-        Map<Object, Map<String, Object>> disponibilidadPorId = new HashMap<>();
-        for (Map<String, Object> zona : backend.getLista(DISPONIBILIDAD)) {
-            disponibilidadPorId.put(zona.get("id"), zona);
+        Map<Object, Map<String, Object>> disponibilidadPorId = backend.getLista(DISPONIBILIDAD).stream()
+                .collect(Collectors.toMap(zona -> zona.get("id"), zona -> zona));
+        return backend.getLista(BASE + "/inactivos").stream()
+                .map(zona -> completarEspacios(zona, disponibilidadPorId.get(zona.get("id"))))
+                .toList();
+    }
+
+    /**
+     * Devuelve una COPIA de la zona con los espacios ocupados y disponibles reales. No modifica la zona
+     * original; si la zona no tiene ocupación calculada ({@code real} es null), conserva lo que informa el back.
+     *
+     * @param zona ZonaResponse tal como la devolvió el back
+     * @param real la misma zona con la ocupación calculada (puede ser null)
+     * @return copia de la zona con espaciosOcupados y espaciosDisponibles actualizados
+     */
+    private Map<String, Object> completarEspacios(Map<String, Object> zona, Map<String, Object> real) {
+        Map<String, Object> resultado = new HashMap<>(zona);
+        if (real != null) {
+            resultado.put("espaciosOcupados", real.get("espaciosOcupados"));
+            resultado.put("espaciosDisponibles", real.get("espaciosDisponibles"));
         }
-        for (Map<String, Object> zona : zonas) {
-            Map<String, Object> real = disponibilidadPorId.get(zona.get("id"));
-            if (real != null) {
-                zona.put("espaciosOcupados", real.get("espaciosOcupados"));
-                zona.put("espaciosDisponibles", real.get("espaciosDisponibles"));
-            }
-        }
-        return zonas;
+        return resultado;
     }
 
     /**
