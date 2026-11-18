@@ -12,7 +12,7 @@ import org.springframework.web.servlet.support.RequestContextUtils;
 
 import java.net.URI;
 import java.util.Set;
-
+//check
 /**
  * Traduce los errores del back ({@link BackendException}) a lo que ve el usuario:
  * <ul>
